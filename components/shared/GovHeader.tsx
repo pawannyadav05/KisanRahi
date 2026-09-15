@@ -1,12 +1,20 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Wifi, WifiOff, Sun, Moon } from 'lucide-react';
-import type { Language } from '@/types/kisanrahi';
+import Link from 'next/link';
+import { Wifi, WifiOff, Sun, Moon, UserCheck, LogOut, LogIn } from 'lucide-react';
+import type { Language, UserRole } from '@/types/kisanrahi';
 
 interface GovHeaderProps {
   language?: Language;
   onLanguageChange?: (lang: Language) => void;
+}
+
+interface UserSession {
+  id: string;
+  name: string;
+  phone: string;
+  role: UserRole;
 }
 
 export const GovHeader: React.FC<GovHeaderProps> = ({
@@ -17,6 +25,7 @@ export const GovHeader: React.FC<GovHeaderProps> = ({
   const [currentLang, setCurrentLang] = useState<Language>(language);
   const [textSize, setTextSize] = useState<'sm' | 'md' | 'lg'>('md');
   const [highContrast, setHighContrast] = useState<boolean>(false);
+  const [session, setSession] = useState<UserSession | null>(null);
 
   useEffect(() => {
     setIsOnline(typeof navigator !== 'undefined' ? navigator.onLine : true);
@@ -27,11 +36,29 @@ export const GovHeader: React.FC<GovHeaderProps> = ({
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    // Check user session
+    fetch('/api/auth/me')
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data?.authenticated && data?.user) {
+          setSession(data.user);
+        }
+      })
+      .catch(() => {});
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setSession(null);
+      window.location.href = '/login';
+    } catch {}
+  };
 
   const handleLangToggle = (lang: Language) => {
     setCurrentLang(lang);
@@ -144,6 +171,35 @@ export const GovHeader: React.FC<GovHeaderProps> = ({
             </h1>
             <p className="text-xs text-gray-300">Direct Farm-to-Buyer Pooling & Voice Logistics Platform</p>
           </div>
+        </div>
+
+        {/* User Session / Auth Quick Action */}
+        <div className="flex items-center space-x-2">
+          {session ? (
+            <div className="flex items-center space-x-2 bg-navyLight/90 border border-navyLight px-3 py-1.5 rounded-lg text-xs">
+              <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <div className="hidden sm:block">
+                <span className="font-bold text-white">{session.name}</span>
+                <span className="text-gray-400 ml-1">({session.role})</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="ml-2 px-2 py-0.5 rounded bg-red-500/20 text-red-300 hover:bg-red-500/40 transition-colors text-[11px] flex items-center gap-1"
+                title="Logout"
+              >
+                <LogOut className="w-3 h-3" />
+                <span className="hidden md:inline">Logout</span>
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-colors shadow-sm"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Login / 1-Click Demo</span>
+            </Link>
+          )}
         </div>
       </div>
     </header>
