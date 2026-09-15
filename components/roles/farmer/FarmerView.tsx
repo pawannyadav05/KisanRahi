@@ -396,27 +396,7 @@ export const FarmerView: React.FC = () => {
     };
 
     recognition.onerror = (event: any) => {
-      if (event.error === 'network' || event.error === 'no-speech' || event.error === 'audio-capture') {
-        // Fallback gracefully to demo voice input so presentation and testing never fails
-        setTranscript('Transcribing… (offline fallback)');
-        setTimeout(() => {
-          const sampleInputs = [
-            '200 kg tomato from Sasaram village',
-            '150 kg potato from Dehri village',
-            '300 kg onion from Mohania village',
-          ];
-          const simulated = sampleInputs[Math.floor(Math.random() * sampleInputs.length)];
-          setTranscript(simulated);
-          const parsed = parseVoiceTranscript(simulated);
-          if (parsed) {
-            addListingFromVoice(parsed);
-          }
-          setVoiceError('');
-          setIsListening(false);
-        }, 1200);
-        return;
-      }
-      setVoiceError(`Voice notice: ${event.error}`);
+      setVoiceError(`Voice error: ${event.error}`);
       setIsListening(false);
     };
 
@@ -480,22 +460,6 @@ export const FarmerView: React.FC = () => {
             <p className="text-xs text-gray-400 mt-0.5">
               Say something like <em className="text-navy font-medium">&quot;200 kg tomato from Sasaram village&quot;</em>
             </p>
-            <div className="mt-2 flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] text-gray-400 font-medium">Quick sample:</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setVoiceError('');
-                  const sample = '200 kg tomato from Sasaram village';
-                  setTranscript(sample);
-                  const parsed = parseVoiceTranscript(sample);
-                  if (parsed) addListingFromVoice(parsed);
-                }}
-                className="text-[10px] font-semibold text-saffron bg-saffron/10 hover:bg-saffron hover:text-white px-2 py-0.5 rounded-full transition cursor-pointer"
-              >
-                + 200 kg tomato (Sasaram)
-              </button>
-            </div>
           </div>
 
           {/* Transcript display area */}
@@ -508,19 +472,7 @@ export const FarmerView: React.FC = () => {
                 </div>
               )}
               {voiceError && (
-                <div className="mt-2 flex items-center justify-between gap-2 p-2 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800">
-                  <span>{voiceError}</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setVoiceError('');
-                      toggleListening();
-                    }}
-                    className="font-bold underline text-saffron flex-shrink-0"
-                  >
-                    Retry
-                  </button>
-                </div>
+                <p className="text-xs text-red-500 font-medium mt-1">{voiceError}</p>
               )}
             </div>
           )}
