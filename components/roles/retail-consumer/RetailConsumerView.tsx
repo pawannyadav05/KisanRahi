@@ -81,22 +81,22 @@ export const RetailConsumerView = () => {
   ];
 
   const [selectedPackId, setSelectedPackId] = useState('essential');
-  const [packWeeks, setPackWeeks] = useState({
+  const [packWeeks, setPackWeeks] = useState<Record<string, number>>({
     essential: 1,
     premium: 1,
     budget: 1,
   });
-  const [expandedPacks, setExpandedPacks] = useState({
+  const [expandedPacks, setExpandedPacks] = useState<Record<string, boolean>>({
     essential: true,
     premium: false,
     budget: false,
   });
 
-  const toggleExpand = (id) => {
+  const toggleExpand = (id: string) => {
     setExpandedPacks((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const updateWeeks = (id, delta) => {
+  const updateWeeks = (id: string, delta: number) => {
     setPackWeeks((prev) => ({
       ...prev,
       [id]: Math.max(1, (prev[id] || 1) + delta),
@@ -109,11 +109,17 @@ export const RetailConsumerView = () => {
   // ── AI Crop Grading State ──
   const [isGrading, setIsGrading] = useState(false);
   const [gradeProgress, setGradeProgress] = useState(0);
-  const [gradingResult, setGradingResult] = useState(null);
+  const [gradingResult, setGradingResult] = useState<{
+    uniformityPct: number;
+    damagePct: number;
+    freshnessPct: number;
+    grade: string;
+    evaluatedAt: string;
+  } | null>(null);
   const [selectedImageName, setSelectedImageName] = useState('');
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -164,8 +170,24 @@ export const RetailConsumerView = () => {
   const [farmerName, setFarmerName] = useState('Ramesh Kumar');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentProgress, setPaymentProgress] = useState(0);
-  const [currentPayout, setCurrentPayout] = useState(null);
-  const [payoutHistory, setPayoutHistory] = useState([
+  const [currentPayout, setCurrentPayout] = useState<{
+    gatewayRef: string;
+    status: string;
+    amount: number;
+    farmerUpi: string;
+    farmerName: string;
+    orderId: string;
+    timestamp: string;
+  } | null>(null);
+  const [payoutHistory, setPayoutHistory] = useState<Array<{
+    gatewayRef: string;
+    status: string;
+    amount: number;
+    farmerUpi: string;
+    farmerName: string;
+    orderId: string;
+    timestamp: string;
+  }>>([
     {
       gatewayRef: 'pay_test_88f9x2K1mP01qR',
       status: 'Confirmed',
