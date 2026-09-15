@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, FALLBACK_USERS } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -11,15 +11,29 @@ export async function GET() {
       return NextResponse.json({ authenticated: false, user: null }, { status: 401 });
     }
 
-    // Optional: fetch fresh user details from DB
-    const user = await prisma.user.findUnique({
-      where: { id: session.userId },
-      select: { id: true, name: true, phone: true, role: true, createdAt: true },
-    }).catch(() => null);
+    let user: any = null;
+    try {
+      user = await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: { id: true, name: true, phone: true, role: true, avatarUrl: true, createdAt: true },
+      });
+    } catch (e) {
+      console.warn('[AUTH ME DB WARNING]:', e);
+    }
+
+    if (!user) {
+      const fb = FALLBACK_USERS[session.phone];
+      user = {
+        id: session.userId,
+        name: session.name || fb?.name || 'User',
+        phone: session.phone,
+        role: session.role || fb?.role || 'farmer',
+      };
+    }
 
     return NextResponse.json({
       authenticated: true,
-      user: user || session,
+      user,
     });
   } catch (error: any) {
     return NextResponse.json(
