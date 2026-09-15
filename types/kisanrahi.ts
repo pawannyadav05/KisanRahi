@@ -5,6 +5,7 @@
 export type Language = 'en' | 'hi';
 export type UserRole = 'farmer' | 'hub_manager' | 'bulk_buyer' | 'retail_consumer' | 'driver' | 'doca_admin';
 export type ListingStatus = 'Listed' | 'Graded' | 'Pooled' | 'Paid';
+export type Grade = 'A' | 'B' | 'C';
 
 export interface CropListing {
   id: string;
@@ -19,7 +20,7 @@ export interface CropListing {
 
 export interface GradeResult {
   listingId: string;
-  grade: 'A' | 'B' | 'C';
+  grade: Grade;
   uniformityPct: number;
   damagePct: number;
   gradedAt: string;
