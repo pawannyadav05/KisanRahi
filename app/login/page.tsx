@@ -20,68 +20,45 @@ import {
 } from 'lucide-react';
 import type { UserRole } from '@/types/kisanrahi';
 
-const DEMO_ACCOUNTS: Array<{
-  role: UserRole;
-  name: string;
-  phone: string;
-  location: string;
-  icon: React.ElementType;
-  badgeColor: string;
-  description: string;
-}> = [
+const DEMO_CATEGORIES = [
   {
-    role: 'farmer',
-    name: 'Ramesh Yadav',
-    phone: '9876543210',
-    location: 'Sasaram, Rohtas',
-    icon: Tractor,
-    badgeColor: 'bg-green-600 hover:bg-green-700 text-white',
-    description: 'List produce, check AI grading & receive guaranteed MSP payout',
+    categoryTitle: '🌾 6 Farmers (Producers / Sellers)',
+    items: [
+      { name: 'Ramesh Yadav', phone: '9876543210', location: 'Sasaram PACS (5.5 Acres)', role: 'farmer' as UserRole, icon: Tractor, color: 'bg-green-600', desc: 'Tomato, Potato, Onion & MSP Floor' },
+      { name: 'Sunita Devi', phone: '9876543211', location: 'Sasaram North (3.2 Acres)', role: 'farmer' as UserRole, icon: Tractor, color: 'bg-green-600', desc: 'Tomato, Chilli & AI Quality Grade A' },
+      { name: 'Bimal Singh', phone: '9876543217', location: 'Nokha Village (4.8 Acres)', role: 'farmer' as UserRole, icon: Tractor, color: 'bg-green-600', desc: 'Paddy, Wheat & Direct PACS Pooling' },
+      { name: 'Rajeshwar Kushwaha', phone: '9876543218', location: 'Kargahar Mandi (6.0 Acres)', role: 'farmer' as UserRole, icon: Tractor, color: 'bg-green-600', desc: 'Green Peas & Cold Storage Staging' },
+      { name: 'Meena Kumari', phone: '9876543219', location: 'Chenari FPO (2.5 Acres)', role: 'farmer' as UserRole, icon: Tractor, color: 'bg-green-600', desc: 'Organic Mustard, Chilli & Garlic' },
+      { name: 'Dharmendra Mahto', phone: '9876543220', location: 'Dehri Aggregation (7.1 Acres)', role: 'farmer' as UserRole, icon: Tractor, color: 'bg-green-600', desc: 'High-Volume Tomato & Maize' },
+    ],
   },
   {
-    role: 'hub_manager',
-    name: 'Vikas Sharma',
-    phone: '9876543212',
-    location: 'Sasaram Hub #3',
-    icon: Warehouse,
-    badgeColor: 'bg-emerald-600 hover:bg-emerald-700 text-white',
-    description: 'Scan incoming lots, verify weight, trigger batch pooling',
+    categoryTitle: '🏢 2 Hub Managers (PACS / Aggregators)',
+    items: [
+      { name: 'Vikas Sharma', phone: '9876543212', location: 'Sasaram Hub #3', role: 'hub_manager' as UserRole, icon: Warehouse, color: 'bg-teal-600', desc: '2,500kg Capacity • Digital Weighbridge' },
+      { name: 'Anita Choudhary', phone: '9876543221', location: 'Dehri FPO Center', role: 'hub_manager' as UserRole, icon: Warehouse, color: 'bg-teal-600', desc: '3,500kg Capacity • Corridor Dispatch' },
+    ],
   },
   {
-    role: 'bulk_buyer',
-    name: 'Patna Caterers Co-op',
-    phone: '9876543213',
-    location: 'Patna Mandi B2B',
-    icon: ShoppingBag,
-    badgeColor: 'bg-blue-600 hover:bg-blue-700 text-white',
-    description: 'Order aggregate pooled lots, lock escrow, track dispatch',
+    categoryTitle: '🏬 2 Bulk Buyers (B2B / Processors)',
+    items: [
+      { name: 'Patna Caterers Co-op', phone: '9876543213', location: 'Patna Mandi B2B', role: 'bulk_buyer' as UserRole, icon: ShoppingBag, color: 'bg-blue-600', desc: 'Escrow Locked 10-Tonne Lot Sourcing' },
+      { name: 'Magadh Agro Processing Ltd', phone: '9876543222', location: 'Gaya Industrial Hub', role: 'bulk_buyer' as UserRole, icon: ShoppingBag, color: 'bg-blue-600', desc: 'Direct Tomato Paste & Sauce Factory' },
+    ],
   },
   {
-    role: 'retail_consumer',
-    name: 'Priya Verma',
-    phone: '9876543214',
-    location: 'Patna Central B2C',
-    icon: ShoppingCart,
-    badgeColor: 'bg-purple-600 hover:bg-purple-700 text-white',
-    description: 'Community bulk-buy, 28% cheaper fresh farm vegetables',
+    categoryTitle: '🛒 2 Retail Consumers (B2C / Society)',
+    items: [
+      { name: 'Priya Verma', phone: '9876543214', location: 'Patna Central B2C', role: 'retail_consumer' as UserRole, icon: ShoppingCart, color: 'bg-purple-600', desc: '28% Cheaper Farm-Fresh Community Drop' },
+      { name: 'Amit Kumar', phone: '9876543223', location: 'Danapur Railway Colony', role: 'retail_consumer' as UserRole, icon: ShoppingCart, color: 'bg-purple-600', desc: 'Daily Fresh Vegetables & Provenance QR' },
+    ],
   },
   {
-    role: 'driver',
-    name: 'Minhaj Ansari',
-    phone: '9876543215',
-    location: 'Sasaram ↔ Patna Corridor',
-    icon: Truck,
-    badgeColor: 'bg-amber-600 hover:bg-amber-700 text-white',
-    description: 'Dynamic milk-run routing, digital weighbridge QR pickup',
-  },
-  {
-    role: 'doca_admin',
-    name: 'DOCA Officer R.K. Mehta',
-    phone: '9876543216',
-    location: 'DoCA Central Command',
-    icon: Building2,
-    badgeColor: 'bg-red-600 hover:bg-red-700 text-white',
-    description: 'Price stabilization buffer, dynamic MSP, anti-hoarding radar',
+    categoryTitle: '⚡ Corridor Logistics & DoCA Oversight',
+    items: [
+      { name: 'Minhaj Ansari (Driver)', phone: '9876543215', location: 'Sasaram-Patna Corridor', role: 'driver' as UserRole, icon: Truck, color: 'bg-amber-600', desc: 'Dynamic Multi-Stop Milk-Run Routing' },
+      { name: 'DOCA Officer R.K. Mehta', phone: '9876543216', location: 'DoCA Central Command', role: 'doca_admin' as UserRole, icon: Building2, color: 'bg-red-600', desc: 'Anti-Hoarding Radar & Price Stabilization' },
+    ],
   },
 ];
 
@@ -96,7 +73,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const handleDemoLogin = async (demoPhone: string) => {
+  const handleDemoLogin = async (demoPhone: string, demoRole: UserRole) => {
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -109,13 +86,40 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Login failed');
 
-      setSuccess(`Logged in as ${data.user.name} (${data.user.role})! Redirecting...`);
+      setSuccess(`Authenticated as ${data.user.name}! Launching ${data.user.role} view...`);
       setTimeout(() => {
-        router.push('/');
-        router.refresh();
-      }, 600);
+        window.location.href = `/?role=${data.user.role}&app=true`;
+      }, 400);
     } catch (err: any) {
       setError(err.message || 'Demo login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'pawan.farmer@kisanrahi.in',
+          name: 'Pawan Yadav (Google Verified)',
+          role: role || 'farmer',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Google auth failed');
+
+      setSuccess(`Signed in with Google as ${data.user.name}! Launching dashboard...`);
+      setTimeout(() => {
+        window.location.href = `/?role=${data.user.role}&app=true`;
+      }, 400);
+    } catch (err: any) {
+      setError(err.message || 'Google authentication failed');
     } finally {
       setLoading(false);
     }
@@ -135,11 +139,10 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Invalid credentials');
 
-      setSuccess(`Welcome back, ${data.user.name}!`);
+      setSuccess(`Welcome back, ${data.user.name}! Redirecting to ${data.user.role} dashboard...`);
       setTimeout(() => {
-        router.push('/');
-        router.refresh();
-      }, 600);
+        window.location.href = `/?role=${data.user.role}&app=true`;
+      }, 400);
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {
@@ -161,43 +164,12 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Signup failed');
 
-      setSuccess(`Account created for ${data.user.name}! Redirecting...`);
+      setSuccess(`Account registered for ${data.user.name}! Launching view...`);
       setTimeout(() => {
-        router.push('/');
-        router.refresh();
-      }, 600);
+        window.location.href = `/?role=${data.user.role}&app=true`;
+      }, 400);
     } catch (err: any) {
       setError(err.message || 'Signup failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleAuth = async () => {
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      const res = await fetch('/api/auth/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: 'demo.farmer@gmail.com',
-          name: 'Pawan Yadav (Google Verified)',
-          avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop',
-          role: role || 'farmer',
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Google auth failed');
-
-      setSuccess(`Signed in with Google as ${data.user.name}! Redirecting...`);
-      setTimeout(() => {
-        router.push('/');
-        router.refresh();
-      }, 600);
-    } catch (err: any) {
-      setError(err.message || 'Google authentication failed');
     } finally {
       setLoading(false);
     }
@@ -206,24 +178,24 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       {/* Top Banner */}
-      <div className="sm:mx-auto sm:w-full sm:max-w-2xl text-center px-4">
+      <div className="sm:mx-auto sm:w-full sm:max-w-3xl text-center px-4">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-4">
           <ShieldCheck className="w-4 h-4" />
-          Government of India • DoCA Direct Procurement
+          Government of India • DoCA Direct Procurement Grid
         </div>
         <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white flex items-center justify-center gap-3">
           <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-emerald-400 bg-clip-text text-transparent">
-            KisanRahi Auth Portal
+            KisanRahi RBAC Authentication
           </span>
         </h1>
         <p className="mt-2 text-sm text-slate-400">
-          Sign in to access your role dashboard, smart contracts, and real-time PostGIS pooling.
+          Sign in to access your role-specific dashboard with strict access control.
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl px-4">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-3xl px-4">
         <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl shadow-2xl p-6 sm:p-8 backdrop-blur-xl">
-          {/* Google OAuth 1-Click Button */}
+          {/* Google OAuth Button */}
           <div className="mb-6">
             <button
               type="button"
@@ -272,7 +244,7 @@ export default function LoginPage() {
               }`}
             >
               <Zap className="w-4 h-4" />
-              1-Click Demo Login
+              ⚡ Quick Role Logins
             </button>
             <button
               onClick={() => setActiveTab('login')}
@@ -282,7 +254,7 @@ export default function LoginPage() {
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              Manual Login
+              Phone Login
             </button>
             <button
               onClick={() => setActiveTab('signup')}
@@ -292,7 +264,7 @@ export default function LoginPage() {
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              Register New
+              Register New ID
             </button>
           </div>
 
@@ -310,55 +282,60 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* TAB 1: 1-CLICK HACKATHON DEMO LOGINS */}
+          {/* TAB 1: 1-CLICK DEMO */}
           {activeTab === 'demo' && (
-            <div>
-              <div className="flex items-center justify-between mb-4">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                  Select a Role to Sign In Instantly:
+                  Select a Role Account to Launch Directly:
                 </span>
-                <span className="text-[11px] px-2 py-0.5 rounded bg-slate-700/60 text-slate-300">
-                  Password: <code className="text-amber-400 font-mono">password123</code>
+                <span className="text-[11px] px-2.5 py-1 rounded bg-slate-700/60 text-slate-300 border border-slate-600">
+                  Password: <code className="text-amber-400 font-mono font-bold">password123</code>
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {DEMO_ACCOUNTS.map((account) => {
-                  const Icon = account.icon;
-                  return (
-                    <button
-                      key={account.role}
-                      type="button"
-                      disabled={loading}
-                      onClick={() => handleDemoLogin(account.phone)}
-                      className="group flex flex-col text-left p-4 rounded-xl bg-slate-900/60 border border-slate-700/70 hover:border-emerald-500/50 hover:bg-slate-900/90 transition-all shadow-sm hover:shadow-md relative overflow-hidden"
-                    >
-                      <div className="flex items-center justify-between w-full mb-2">
-                        <div className="flex items-center gap-2.5">
-                          <div className={`p-2 rounded-lg ${account.badgeColor} shadow`}>
-                            <Icon className="w-4 h-4 text-white" />
-                          </div>
-                          <div>
-                            <div className="font-bold text-sm text-white group-hover:text-emerald-300 transition-colors">
-                              {account.name}
+              {DEMO_CATEGORIES.map((cat, idx) => (
+                <div key={idx} className="space-y-2">
+                  <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                    {cat.categoryTitle}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {cat.items.map((acc, i) => {
+                      const Icon = acc.icon;
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          disabled={loading}
+                          onClick={() => handleDemoLogin(acc.phone, acc.role)}
+                          className="flex flex-col text-left p-3.5 rounded-xl bg-slate-900/70 border border-slate-700/80 hover:border-emerald-500/60 hover:bg-slate-900 transition-all group shadow-sm relative overflow-hidden"
+                        >
+                          <div className="flex items-center justify-between w-full mb-1.5">
+                            <div className="flex items-center gap-2.5">
+                              <div className={`p-2 rounded-lg ${acc.color} text-white shadow`}>
+                                <Icon className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="font-bold text-sm text-white group-hover:text-emerald-300 transition-colors">
+                                  {acc.name}
+                                </div>
+                                <div className="text-[11px] text-slate-400">{acc.location}</div>
+                              </div>
                             </div>
-                            <div className="text-[11px] text-slate-400">
-                              {account.location}
-                            </div>
+                            <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all flex-shrink-0" />
                           </div>
-                        </div>
-                        <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
-                      </div>
-                      <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-                        {account.description}
-                      </p>
-                      <div className="mt-2 text-[10px] text-slate-500 font-mono flex items-center gap-1">
-                        <Phone className="w-3 h-3" /> {account.phone}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+                          <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                            {acc.desc}
+                          </p>
+                          <div className="mt-2 text-[10px] text-slate-500 font-mono flex items-center gap-1">
+                            <Phone className="w-3 h-3" /> {acc.phone}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
@@ -405,7 +382,7 @@ export default function LoginPage() {
                   disabled={loading}
                   className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg hover:shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
                 >
-                  {loading ? 'Authenticating...' : 'Sign In'}
+                  {loading ? 'Authenticating...' : 'Sign In & Enter Dashboard'}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -490,7 +467,7 @@ export default function LoginPage() {
                   disabled={loading}
                   className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg hover:shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
                 >
-                  {loading ? 'Creating Account...' : 'Create Account & Sign In'}
+                  {loading ? 'Creating Account...' : 'Create Account & Launch View'}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -503,7 +480,7 @@ export default function LoginPage() {
               onClick={() => router.push('/')}
               className="text-xs text-slate-400 hover:text-white transition-colors"
             >
-              ← Return to Main KisanRahi Dashboard
+              ← Return to Main Landing Page
             </button>
           </div>
         </div>
