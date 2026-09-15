@@ -13,12 +13,12 @@ import {
   MapPin,
   Clock,
   ShieldCheck,
-  Plus,
   X,
   Loader2,
 } from 'lucide-react';
 import type { CropListing, ListingStatus, PayoutRecord } from '@/types/kisanrahi';
 import { mockListings, mockPayouts } from '@/lib/mock-data';
+import { subscribeGradingStore } from '@/lib/grading-store';
 
 // ─── Status Stepper Config ──────────────────────────────────────────────────
 const STATUS_STEPS: { key: ListingStatus; label: string; icon: React.FC<{ className?: string }> }[] = [
@@ -287,6 +287,15 @@ export const FarmerView: React.FC = () => {
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState<string>('');
+
+  // Subscribe to grading store — re-renders when Hub Manager grades/pools a listing
+  useEffect(() => {
+    const unsub = subscribeGradingStore(() => {
+      // Snapshot the current mockListings (mutated by grading-store)
+      setListings([...mockListings]);
+    });
+    return unsub;
+  }, []);
   const [voiceError, setVoiceError] = useState<string>('');
   const [showToast, setShowToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const recognitionRef = useRef<any>(null);
