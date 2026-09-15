@@ -20,19 +20,52 @@ import {
 } from 'lucide-react';
 import type { UserRole } from '@/types/kisanrahi';
 
-const DEMO_ACCOUNTS = [
-  { role: 'farmer' as UserRole, name: 'Ramesh Yadav', phone: '9876543210', location: 'Sasaram, Rohtas', icon: Tractor, badgeColor: 'bg-green-600' },
-  { role: 'hub_manager' as UserRole, name: 'Vikas Sharma', phone: '9876543212', location: 'Sasaram Hub #3', icon: Warehouse, badgeColor: 'bg-emerald-600' },
-  { role: 'bulk_buyer' as UserRole, name: 'Patna Caterers Co-op', phone: '9876543213', location: 'Patna Mandi B2B', icon: ShoppingBag, badgeColor: 'bg-blue-600' },
-  { role: 'retail_consumer' as UserRole, name: 'Priya Verma', phone: '9876543214', location: 'Patna Central B2C', icon: ShoppingCart, badgeColor: 'bg-purple-600' },
-  { role: 'driver' as UserRole, name: 'Minhaj Ansari', phone: '9876543215', location: 'Sasaram ↔ Patna Corridor', icon: Truck, badgeColor: 'bg-amber-600' },
-  { role: 'doca_admin' as UserRole, name: 'DOCA Officer R.K. Mehta', phone: '9876543216', location: 'DoCA Command', icon: Building2, badgeColor: 'bg-red-600' },
+const DEMO_CATEGORIES = [
+  {
+    categoryTitle: '🌾 6 Farmers (Producers / Sellers)',
+    items: [
+      { name: 'Ramesh Yadav', phone: '9876543210', location: 'Sasaram PACS (5.5 Acres)', role: 'farmer' as UserRole, icon: Tractor, color: 'bg-green-600' },
+      { name: 'Sunita Devi', phone: '9876543211', location: 'Sasaram North (3.2 Acres)', role: 'farmer' as UserRole, icon: Tractor, color: 'bg-green-600' },
+      { name: 'Bimal Singh', phone: '9876543217', location: 'Nokha Village (4.8 Acres)', role: 'farmer' as UserRole, icon: Tractor, color: 'bg-green-600' },
+      { name: 'Rajeshwar Kushwaha', phone: '9876543218', location: 'Kargahar Mandi (6.0 Acres)', role: 'farmer' as UserRole, icon: Tractor, color: 'bg-green-600' },
+      { name: 'Meena Kumari', phone: '9876543219', location: 'Chenari FPO (2.5 Acres)', role: 'farmer' as UserRole, icon: Tractor, color: 'bg-green-600' },
+      { name: 'Dharmendra Mahto', phone: '9876543220', location: 'Dehri Aggregation (7.1 Acres)', role: 'farmer' as UserRole, icon: Tractor, color: 'bg-green-600' },
+    ],
+  },
+  {
+    categoryTitle: '🏢 2 Hub Managers (PACS / Aggregators)',
+    items: [
+      { name: 'Vikas Sharma', phone: '9876543212', location: 'Sasaram Hub #3 (Cap: 2,500kg)', role: 'hub_manager' as UserRole, icon: Warehouse, color: 'bg-teal-600' },
+      { name: 'Anita Choudhary', phone: '9876543221', location: 'Dehri FPO Center (Cap: 3,500kg)', role: 'hub_manager' as UserRole, icon: Warehouse, color: 'bg-teal-600' },
+    ],
+  },
+  {
+    categoryTitle: '🏬 2 Bulk Buyers (B2B / Processors)',
+    items: [
+      { name: 'Patna Caterers Co-op', phone: '9876543213', location: 'Patna Mandi B2B Center', role: 'bulk_buyer' as UserRole, icon: ShoppingBag, color: 'bg-blue-600' },
+      { name: 'Magadh Agro Ltd', phone: '9876543222', location: 'Gaya Industrial Hub', role: 'bulk_buyer' as UserRole, icon: ShoppingBag, color: 'bg-blue-600' },
+    ],
+  },
+  {
+    categoryTitle: '🛒 2 Retail Consumers (B2C / Society)',
+    items: [
+      { name: 'Priya Verma', phone: '9876543214', location: 'Patna Central B2C', role: 'retail_consumer' as UserRole, icon: ShoppingCart, color: 'bg-purple-600' },
+      { name: 'Amit Kumar', phone: '9876543223', location: 'Danapur Railway Colony B2C', role: 'retail_consumer' as UserRole, icon: ShoppingCart, color: 'bg-purple-600' },
+    ],
+  },
+  {
+    categoryTitle: '⚡ Corridor Logistics & DoCA Oversight',
+    items: [
+      { name: 'Minhaj Ansari (Driver)', phone: '9876543215', location: 'Sasaram-Patna Corridor', role: 'driver' as UserRole, icon: Truck, color: 'bg-amber-600' },
+      { name: 'DOCA Officer R.K. Mehta', phone: '9876543216', location: 'National Price Radar', role: 'doca_admin' as UserRole, icon: Building2, color: 'bg-red-600' },
+    ],
+  },
 ];
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (role: UserRole) => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -51,7 +84,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleDemoLogin = async (demoPhone: string) => {
+  const handleDemoLogin = async (demoPhone: string, demoRole: UserRole) => {
     setLoading(true);
     setError(null);
     try {
@@ -63,12 +96,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Login failed');
 
-      setSuccess(`Welcome, ${data.user.name}!`);
+      setSuccess(`Authenticated as ${data.user.name} (${data.user.role})! Redirecting to Dashboard...`);
       setTimeout(() => {
         onClose();
-        if (onSuccess) onSuccess();
-        window.location.reload();
-      }, 500);
+        if (onSuccess) onSuccess(data.user.role);
+        window.location.href = `/?role=${data.user.role}&app=true`;
+      }, 400);
     } catch (err: any) {
       setError(err.message || 'Demo login failed');
     } finally {
@@ -80,26 +113,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setLoading(true);
     setError(null);
     try {
-      // Authenticate with Google endpoint
       const res = await fetch('/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: 'demo.farmer@gmail.com',
+          email: 'pawan.farmer@kisanrahi.in',
           name: 'Pawan Yadav (Google Verified)',
-          avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop',
           role: role || 'farmer',
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Google auth failed');
 
-      setSuccess(`Signed in with Google as ${data.user.name}!`);
+      setSuccess(`Signed in with Google! Redirecting to Dashboard...`);
       setTimeout(() => {
         onClose();
-        if (onSuccess) onSuccess();
-        window.location.reload();
-      }, 500);
+        if (onSuccess) onSuccess(data.user.role);
+        window.location.href = `/?role=${data.user.role}&app=true`;
+      }, 400);
     } catch (err: any) {
       setError(err.message || 'Google authentication failed');
     } finally {
@@ -120,12 +151,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Invalid credentials');
 
-      setSuccess(`Welcome back, ${data.user.name}!`);
+      setSuccess(`Welcome back, ${data.user.name}! Redirecting...`);
       setTimeout(() => {
         onClose();
-        if (onSuccess) onSuccess();
-        window.location.reload();
-      }, 500);
+        if (onSuccess) onSuccess(data.user.role);
+        window.location.href = `/?role=${data.user.role}&app=true`;
+      }, 400);
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {
@@ -146,12 +177,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Signup failed');
 
-      setSuccess(`Account created for ${data.user.name}!`);
+      setSuccess(`Account created for ${data.user.name}! Redirecting...`);
       setTimeout(() => {
         onClose();
-        if (onSuccess) onSuccess();
-        window.location.reload();
-      }, 500);
+        if (onSuccess) onSuccess(data.user.role);
+        window.location.href = `/?role=${data.user.role}&app=true`;
+      }, 400);
     } catch (err: any) {
       setError(err.message || 'Signup failed');
     } finally {
@@ -160,13 +191,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="px-6 py-4 bg-slate-800/90 border-b border-slate-700 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-400" />
-            <span className="font-bold text-white text-base">KisanRahi Secure Login</span>
+            <div>
+              <span className="font-bold text-white text-base block">KisanRahi RBAC Authentication</span>
+              <span className="text-[11px] text-slate-400">Strict Role-Based Access Control Protected</span>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -177,7 +211,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4">
+        <div className="p-6 overflow-y-auto space-y-4">
           {/* Google OAuth Button */}
           <button
             type="button"
@@ -206,9 +240,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             Continue with Google
           </button>
 
-          <div className="flex items-center my-3">
+          <div className="flex items-center my-2">
             <div className="flex-1 border-t border-slate-700" />
-            <span className="px-3 text-[11px] text-slate-500 uppercase tracking-wider">Or</span>
+            <span className="px-3 text-[11px] text-slate-500 uppercase tracking-wider font-semibold">Or</span>
             <div className="flex-1 border-t border-slate-700" />
           </div>
 
@@ -220,7 +254,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 tab === 'demo' ? 'bg-amber-500 text-white shadow' : 'text-slate-400 hover:text-white'
               }`}
             >
-              ⚡ 1-Click Demo
+              ⚡ Quick Role Logins (Password: password123)
             </button>
             <button
               onClick={() => setTab('login')}
@@ -236,7 +270,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 tab === 'signup' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
               }`}
             >
-              Register
+              Register New ID
             </button>
           </div>
 
@@ -254,31 +288,42 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
-          {/* TAB 1: 1-CLICK DEMO */}
+          {/* TAB 1: 1-CLICK DEMO (6 Farmers, 2 Hubs, 2 Bulk, 2 Retail, 1 Driver, 1 Admin) */}
           {tab === 'demo' && (
-            <div className="grid grid-cols-2 gap-2 pt-1 max-h-64 overflow-y-auto pr-1">
-              {DEMO_ACCOUNTS.map((acc) => {
-                const Icon = acc.icon;
-                return (
-                  <button
-                    key={acc.role}
-                    type="button"
-                    disabled={loading}
-                    onClick={() => handleDemoLogin(acc.phone)}
-                    className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 hover:border-emerald-500 text-left transition-all group"
-                  >
-                    <div className={`p-1.5 rounded-lg ${acc.badgeColor} text-white flex-shrink-0`}>
-                      <Icon className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="overflow-hidden">
-                      <div className="text-xs font-bold text-white truncate group-hover:text-emerald-300">
-                        {acc.name}
-                      </div>
-                      <div className="text-[10px] text-slate-400 capitalize">{acc.role.replace('_', ' ')}</div>
-                    </div>
-                  </button>
-                );
-              })}
+            <div className="space-y-4 pt-1 pr-1">
+              {DEMO_CATEGORIES.map((cat, idx) => (
+                <div key={idx} className="space-y-1.5">
+                  <div className="text-[11px] font-bold text-slate-300 uppercase tracking-wider px-1">
+                    {cat.categoryTitle}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {cat.items.map((acc, i) => {
+                      const Icon = acc.icon;
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          disabled={loading}
+                          onClick={() => handleDemoLogin(acc.phone, acc.role)}
+                          className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 hover:border-emerald-500 text-left transition-all group shadow-sm"
+                        >
+                          <div className={`p-2 rounded-lg ${acc.color} text-white flex-shrink-0 shadow`}>
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <div className="overflow-hidden flex-1">
+                            <div className="text-xs font-bold text-white truncate group-hover:text-emerald-300">
+                              {acc.name}
+                            </div>
+                            <div className="text-[10px] text-slate-400 truncate">{acc.location}</div>
+                            <div className="text-[9px] text-slate-500 font-mono">Ph: {acc.phone}</div>
+                          </div>
+                          <ArrowRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
@@ -324,7 +369,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 disabled={loading}
                 className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-1.5"
               >
-                {loading ? 'Authenticating...' : 'Sign In'}
+                {loading ? 'Authenticating...' : 'Sign In & Enter Dashboard'}
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </form>
@@ -335,7 +380,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <form onSubmit={handleSignup} className="space-y-3 pt-1">
               <div>
                 <label className="block text-[11px] font-semibold text-slate-400 uppercase mb-1">
-                  Full Name
+                  Full Name / Entity Name
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
@@ -369,7 +414,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
               <div>
                 <label className="block text-[11px] font-semibold text-slate-400 uppercase mb-1">
-                  Assign Role
+                  Assign System Role
                 </label>
                 <select
                   value={role}
@@ -390,7 +435,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 disabled={loading}
                 className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-1.5"
               >
-                {loading ? 'Creating...' : 'Register Account'}
+                {loading ? 'Creating...' : 'Register Account & Launch View'}
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </form>
