@@ -1,0 +1,191 @@
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  farmer
+  hub_manager
+  bulk_buyer
+  retail_consumer
+  driver
+  doca_admin
+}
+
+enum ListingStatus {
+  Listed
+  Graded
+  Pooled
+  Paid
+}
+
+enum EscrowStatus {
+  Pending
+  Locked
+  Released
+}
+
+enum OrderStatus {
+  Placed
+  Processing
+  Dispatched
+  Delivered
+  Cancelled
+}
+
+enum LotStatus {
+  Filling
+  Ready
+  Dispatched
+}
+
+enum Grade {
+  A
+  B
+  C
+}
+
+enum PayoutStatus {
+  Pending
+  Confirmed
+  Failed
+}
+
+// ─── Models ─────────────────────────────────────────────────────────────────
+
+model User {
+  id            String        @id @default(cuid())
+  name          String
+  phone         String        @unique
+  email         String?       @unique
+  passwordHash  String
+  role          UserRole
+  avatarUrl     String?
+  address       String?
+  village       String?
+  district      String?
+  state         String?
+  pincode       String?
+  upiId         String?
+  kycVerified   Boolean       @default(false)
+  farmSizeAcres Float?
+  primaryCrops  String?       // comma separated e.g. "Tomato, Onion, Chilli"
+  businessName  String?       // for bulk buyers / FPOs
+  gstin         String?       // for B2B buyers
+  createdAt     DateTime      @default(now())
+  listings      CropListing[]
+  orders        Order[]
+
+  @@map("users")
+}
+
+model Hub {
+  id         String        @id @default(cuid())
+  name       String
+  capacityKg Float
+  currentKg  Float         @default(0)
+  lat        Float
+  lng        Float
+  listings   CropListing[]
+  stock      HubStock[]
+  lots       PooledLot[]
+
+  @@map("hubs")
+}
+
+model CropListing {
+  id          String        @id @default(cuid())
+  farmer      User          @relation(fields: [farmerId], references: [id])
+  farmerId    String
+  farmerName  String        @default("")
+  crop        String
+  qtyKg       Float
+  villageName String
+  lat         Float
+  lng         Float
+  status      ListingStatus @default(Listed)
+  hub         Hub?          @relation(fields: [hubId], references: [id])
+  hubId       String?
+  grade       GradeResult?
+  createdAt   DateTime      @default(now())
+
+  @@map("crop_listings")
+}
+
+model GradeResult {
+  id            String      @id @default(cuid())
+  listing       CropListing @relation(fields: [listingId], references: [id])
+  listingId     String      @unique
+  grade         Grade
+  uniformityPct Float
+  damagePct     Float
+  gradedAt      DateTime    @default(now())
+
+  @@map("grade_results")
+}
+
+model PooledLot {
+  id         String    @id @default(cuid())
+  hub        Hub       @relation(fields: [hubId], references: [id])
+  hubId      String
+  hubName    String    @default("")
+  totalKg    Float     @default(0)
+  capacityKg Float
+  status     LotStatus @default(Filling)
+  orders     Order[]
+
+  @@map("pooled_lots")
+}
+
+model HubStock {
+  id          String   @id @default(cuid())
+  hub         Hub      @relation(fields: [hubId], references: [id])
+  hubId       String
+  crop        String
+  grade       Grade
+  availableKg Float    @default(0)
+  reservedKg  Float    @default(0)
+  lastUpdated DateTime @updatedAt
+
+  @@unique([hubId, crop, grade])
+  @@map("hub_stock")
+}
+
+model Order {
+  id           String       @id @default(cuid())
+  buyer        User         @relation(fields: [buyerId], references: [id])
+  buyerId      String
+  buyerName    String       @default("")
+  buyerType    String       // 'B2B' | 'B2C'
+  lot          PooledLot    @relation(fields: [lotId], references: [id])
+  lotId        String
+  qtyKg        Float
+  pricePerKg   Float
+  totalAmount  Float        @default(0)
+  escrowStatus EscrowStatus @default(Pending)
+  status       OrderStatus  @default(Placed)
+  payout       PayoutRecord?
+  createdAt    DateTime     @default(now())
+
+  @@map("orders")
+}
+
+model PayoutRecord {
+  id              String       @id @default(cuid())
+  farmerId        String
+  order           Order        @relation(fields: [orderId], references: [id])
+  orderId         String       @unique
+  amountInr       Float
+  status          PayoutStatus @default(Pending)
+  gatewayRef      String
+  gatewayProvider String       // 'razorpayx' | 'razorpay_test'
+  confirmedAt     DateTime?
+
+  @@map("payout_records")
+}
