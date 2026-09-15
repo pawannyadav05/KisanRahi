@@ -66,10 +66,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {/* Action Buttons */}
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <button
-                onClick={() => onEnterApp('farmer')}
+                onClick={onOpenAuth}
                 className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-xl hover:shadow-emerald-500/25 transition-all flex items-center gap-2 transform hover:-translate-y-0.5"
               >
-                <span>Launch App Dashboard</span>
+                <Lock className="w-4 h-4 text-emerald-200" />
+                <span>Sign In to Access Dashboard</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -78,7 +79,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 className="px-6 py-3.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-white font-bold text-sm border border-slate-700 hover:border-slate-600 shadow-lg transition-all flex items-center gap-2"
               >
                 <Zap className="w-4 h-4 text-amber-400" />
-                <span>1-Click Hackathon Demo Login</span>
+                <span>Role-Based Authentication Login</span>
               </button>
             </div>
 
@@ -199,25 +200,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* ─── 6 Stakeholder Role Portals ───────────────────────────────────── */}
+      {/* ─── 6 Stakeholder Role Portals (RBAC Protected) ─────────────────── */}
       <section className="py-16 bg-slate-900/60 border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <h2 className="text-xs font-bold text-emerald-400 uppercase tracking-widest">
-              Unified Multi-Role Platform
+              Role-Based Access Control (RBAC) Architecture
             </h2>
             <p className="text-2xl sm:text-3xl font-black text-white mt-1">
-              Explore Dashboards for Every Stakeholder
+              Secure Role Portals for Every Stakeholder
             </p>
             <p className="text-xs text-slate-400 mt-2">
-              Click any card to enter that live dashboard directly.
+              Access is strictly restricted by authenticated user role. Sign in to launch your assigned view.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {/* 1. Farmer */}
             <div
-              onClick={() => onEnterApp('farmer')}
+              onClick={onOpenAuth}
               className="group p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-emerald-500/60 hover:bg-slate-850 cursor-pointer transition-all shadow-md hover:shadow-xl relative overflow-hidden"
             >
               <div className="flex items-center justify-between mb-3">
@@ -225,7 +226,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <Tractor className="w-5 h-5" />
                 </div>
                 <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  Enter View <ChevronRight className="w-3.5 h-3.5" />
+                  Sign In <ChevronRight className="w-3.5 h-3.5" />
                 </span>
               </div>
               <h4 className="text-base font-bold text-white group-hover:text-emerald-300 transition-colors">
@@ -238,7 +239,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             {/* 2. Hub Manager */}
             <div
-              onClick={() => onEnterApp('hub_manager')}
+              onClick={onOpenAuth}
               className="group p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-teal-500/60 hover:bg-slate-850 cursor-pointer transition-all shadow-md hover:shadow-xl relative overflow-hidden"
             >
               <div className="flex items-center justify-between mb-3">
@@ -246,7 +247,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <Warehouse className="w-5 h-5" />
                 </div>
                 <span className="text-[11px] font-bold text-teal-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  Enter View <ChevronRight className="w-3.5 h-3.5" />
+                  Sign In <ChevronRight className="w-3.5 h-3.5" />
                 </span>
               </div>
               <h4 className="text-base font-bold text-white group-hover:text-teal-300 transition-colors">
@@ -259,7 +260,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             {/* 3. Bulk Buyer */}
             <div
-              onClick={() => onEnterApp('bulk_buyer')}
+              onClick={onOpenAuth}
               className="group p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-blue-500/60 hover:bg-slate-850 cursor-pointer transition-all shadow-md hover:shadow-xl relative overflow-hidden"
             >
               <div className="flex items-center justify-between mb-3">
@@ -267,7 +268,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <ShoppingBag className="w-5 h-5" />
                 </div>
                 <span className="text-[11px] font-bold text-blue-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  Enter View <ChevronRight className="w-3.5 h-3.5" />
+                  Sign In <ChevronRight className="w-3.5 h-3.5" />
                 </span>
               </div>
               <h4 className="text-base font-bold text-white group-hover:text-blue-300 transition-colors">
@@ -280,7 +281,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             {/* 4. Retail Consumer */}
             <div
-              onClick={() => onEnterApp('retail_consumer')}
+              onClick={onOpenAuth}
               className="group p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-purple-500/60 hover:bg-slate-850 cursor-pointer transition-all shadow-md hover:shadow-xl relative overflow-hidden"
             >
               <div className="flex items-center justify-between mb-3">
@@ -288,7 +289,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <ShoppingCart className="w-5 h-5" />
                 </div>
                 <span className="text-[11px] font-bold text-purple-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  Enter View <ChevronRight className="w-3.5 h-3.5" />
+                  Sign In <ChevronRight className="w-3.5 h-3.5" />
                 </span>
               </div>
               <h4 className="text-base font-bold text-white group-hover:text-purple-300 transition-colors">
@@ -301,7 +302,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             {/* 5. Driver */}
             <div
-              onClick={() => onEnterApp('driver')}
+              onClick={onOpenAuth}
               className="group p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-amber-500/60 hover:bg-slate-850 cursor-pointer transition-all shadow-md hover:shadow-xl relative overflow-hidden"
             >
               <div className="flex items-center justify-between mb-3">
@@ -309,7 +310,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <Truck className="w-5 h-5" />
                 </div>
                 <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  Enter View <ChevronRight className="w-3.5 h-3.5" />
+                  Sign In <ChevronRight className="w-3.5 h-3.5" />
                 </span>
               </div>
               <h4 className="text-base font-bold text-white group-hover:text-amber-300 transition-colors">
@@ -322,7 +323,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             {/* 6. DoCA Admin */}
             <div
-              onClick={() => onEnterApp('doca_admin')}
+              onClick={onOpenAuth}
               className="group p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-red-500/60 hover:bg-slate-850 cursor-pointer transition-all shadow-md hover:shadow-xl relative overflow-hidden"
             >
               <div className="flex items-center justify-between mb-3">
@@ -330,7 +331,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <Building2 className="w-5 h-5" />
                 </div>
                 <span className="text-[11px] font-bold text-red-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  Enter View <ChevronRight className="w-3.5 h-3.5" />
+                  Sign In <ChevronRight className="w-3.5 h-3.5" />
                 </span>
               </div>
               <h4 className="text-base font-bold text-white group-hover:text-red-300 transition-colors">
@@ -355,10 +356,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <span>• Government of India / DoCA Initiative</span>
           </div>
           <div className="flex items-center space-x-4">
-            <button onClick={() => onEnterApp('farmer')} className="hover:text-slate-300 transition-colors">
+            <button onClick={onOpenAuth} className="hover:text-slate-300 transition-colors">
               Farmer Portal
             </button>
-            <button onClick={() => onEnterApp('doca_admin')} className="hover:text-slate-300 transition-colors">
+            <button onClick={onOpenAuth} className="hover:text-slate-300 transition-colors">
               DoCA Command
             </button>
             <button onClick={onOpenAuth} className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors">

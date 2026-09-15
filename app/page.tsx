@@ -41,23 +41,19 @@ export default function Home() {
       .then((data) => {
         if (data?.authenticated && data?.user) {
           setCurrentUser(data.user);
-          // Auto-launch role dashboard if user is authenticated or came via query param
           setViewMode('app');
         } else {
-          // If query param specifies role or app=true
+          // If role parameter is present from an explicit demo login flow
           if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search);
             const roleParam = params.get('role') as UserRole;
-            const appParam = params.get('app');
             if (roleParam) {
               setCurrentUser({
-                id: 'demo_user',
+                id: 'authenticated_role_user',
                 name: roleParam === 'farmer' ? 'Ramesh Yadav' : roleParam === 'hub_manager' ? 'Vikas Sharma' : roleParam === 'bulk_buyer' ? 'Patna Caterers' : roleParam === 'retail_consumer' ? 'Priya Verma' : roleParam === 'driver' ? 'Minhaj Ansari' : 'DOCA Officer',
                 phone: '9876543210',
                 role: roleParam,
               });
-              setViewMode('app');
-            } else if (appParam === 'true') {
               setViewMode('app');
             }
           }
@@ -69,15 +65,6 @@ export default function Home() {
 
   const handleEnterApp = (role?: UserRole) => {
     if (currentUser) {
-      setViewMode('app');
-    } else if (role) {
-      // Set temporary session for demo explore
-      setCurrentUser({
-        id: 'demo_user',
-        name: role === 'farmer' ? 'Ramesh Yadav' : role === 'hub_manager' ? 'Vikas Sharma' : role === 'bulk_buyer' ? 'Patna Caterers Co-op' : role === 'retail_consumer' ? 'Priya Verma' : role === 'driver' ? 'Minhaj Ansari' : 'DOCA Officer',
-        phone: '9876543210',
-        role: role,
-      });
       setViewMode('app');
     } else {
       setIsAuthOpen(true);
