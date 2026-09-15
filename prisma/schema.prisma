@@ -60,14 +60,27 @@ enum PayoutStatus {
 // ─── Models ─────────────────────────────────────────────────────────────────
 
 model User {
-  id           String        @id @default(cuid())
-  name         String
-  phone        String        @unique
-  passwordHash String
-  role         UserRole
-  createdAt    DateTime      @default(now())
-  listings     CropListing[]
-  orders       Order[]
+  id            String        @id @default(cuid())
+  name          String
+  phone         String        @unique
+  email         String?       @unique
+  passwordHash  String
+  role          UserRole
+  avatarUrl     String?
+  address       String?
+  village       String?
+  district      String?
+  state         String?
+  pincode       String?
+  upiId         String?
+  kycVerified   Boolean       @default(false)
+  farmSizeAcres Float?
+  primaryCrops  String?       // comma separated e.g. "Tomato, Onion, Chilli"
+  businessName  String?       // for bulk buyers / FPOs
+  gstin         String?       // for B2B buyers
+  createdAt     DateTime      @default(now())
+  listings      CropListing[]
+  orders        Order[]
 
   @@map("users")
 }
