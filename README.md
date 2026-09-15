@@ -117,8 +117,8 @@ Below are the tailored, copy-pasteable AI prompts for each of the 6 team vertica
 
 ---
 
-#### 4️⃣ Avinish — DoCA Admin View + Live Agmarknet Price Check (View F)
-> **Branch:** `feature/avinish-doca-admin`  
+#### 4️⃣ Avnish — DoCA Admin View + Live Agmarknet Price Check (View F)
+> **Branch:** `feature/avnish-doca-admin`  
 > **Copy & Paste into AI Tool:**
 > ```markdown
 > Using the existing `types/kisanrahi.ts` and `lib/mock-data.ts` (do not modify them), build View F — DoCA Admin in `components/roles/doca-admin/DoCAAdminView.tsx`:
