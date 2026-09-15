@@ -15,10 +15,18 @@ import {
   ChevronRight,
   AlertTriangle,
   Gauge,
+  Thermometer,
+  X,
 } from 'lucide-react';
 import { mockRoute, mockListings } from '@/lib/mock-data';
 import { assignListingsToHubs } from '@/services/routing/hub-assignment';
 import type { RouteStop } from '@/types/kisanrahi';
+import dynamic from 'next/dynamic';
+
+const DynamicRouteMap = dynamic(
+  () => import('./RouteMap'),
+  { ssr: false, loading: () => <div className="h-[300px] w-full rounded-xl bg-canvas flex items-center justify-center border border-border shadow-sm text-gray-500 text-sm animate-pulse">Loading Live Map...</div> }
+);
 
 /* ── Driver / Vehicle mock identity ───────────────────────────────────── */
 const TRUCK_REG = 'BR-01-GA-9021';
@@ -76,6 +84,10 @@ export const DriverView: React.FC = () => {
   /* ── Local state for mutable stops ────────────────────────────────── */
   const [stops, setStops] = useState<RouteStop[]>(mockRoute);
   const [scanningIdx, setScanningIdx] = useState<number | null>(null);
+  
+  /* ── Temperature Modal State ──────────────────────────────────────── */
+  const [tempModalStopIdx, setTempModalStopIdx] = useState<number | null>(null);
+  const [tempValue, setTempValue] = useState('');
 
   /* ── Derived metrics ──────────────────────────────────────────────── */
   const totalPickupKg = useMemo(
@@ -94,20 +106,41 @@ export const DriverView: React.FC = () => {
   /* ── Scan & handoff handler ───────────────────────────────────────── */
   const handleScanConfirm = useCallback(
     (idx: number) => {
+      const stop = stops[idx];
+      
+      // If we are about to transition to Completed, open the temp modal instead
+      if (stop.status === 'EnRoute') {
+        setTempModalStopIdx(idx);
+        return;
+      }
+
       setScanningIdx(idx);
 
       // Simulate a brief scan animation delay (800ms)
       setTimeout(() => {
         setStops((prev) =>
-          prev.map((stop, i) =>
-            i === idx ? { ...stop, status: nextStatus(stop.status) } : stop,
+          prev.map((s, i) =>
+            i === idx ? { ...s, status: nextStatus(s.status) } : s,
           ),
         );
         setScanningIdx(null);
       }, 800);
     },
-    [],
+    [stops],
   );
+
+  /* ── Temp Submission Handler ──────────────────────────────────────── */
+  const handleTempSubmit = () => {
+    if (tempModalStopIdx === null) return;
+    
+    setStops((prev) =>
+      prev.map((s, i) =>
+        i === tempModalStopIdx ? { ...s, status: 'Completed' } : s,
+      ),
+    );
+    setTempModalStopIdx(null);
+    setTempValue('');
+  };
 
   /* ── Render ────────────────────────────────────────────────────────── */
   return (
@@ -191,6 +224,15 @@ export const DriverView: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ─── Route Map ─────────────────────────────────────────────── */}
+      <div className="bg-white rounded-xl p-5 border border-border shadow-sm">
+        <h3 className="font-bold text-navy text-lg mb-4 flex items-center gap-2">
+          <MapPin className="w-5 h-5 text-saffron" />
+          Live Route Tracker
+        </h3>
+        <DynamicRouteMap route={stops} listings={mockListings} />
       </div>
 
       {/* ─── Stop-by-Stop Route Sheet ──────────────────────────────── */}
@@ -401,6 +443,62 @@ export const DriverView: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* ─── Temperature Logging Modal ─────────────────────────────── */}
+      {tempModalStopIdx !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-navy p-4 flex items-center justify-between">
+              <h3 className="font-bold text-white flex items-center gap-2">
+                <Thermometer className="w-5 h-5 text-saffron" />
+                Log Reefer Temperature
+              </h3>
+              <button 
+                onClick={() => setTempModalStopIdx(null)}
+                className="text-gray-300 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-gray-600">
+                Please enter the current temperature of the cold storage unit for <strong>{stops[tempModalStopIdx].hubName}</strong> handoff.
+              </p>
+              
+              <div>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={tempValue}
+                    onChange={(e) => setTempValue(e.target.value)}
+                    placeholder="e.g. 3.5"
+                    className="w-full text-2xl font-bold text-navy border-2 border-border rounded-xl px-4 py-3 focus:border-saffron focus:ring-4 focus:ring-saffron/20 outline-none transition-all pr-12"
+                    autoFocus
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl font-bold text-gray-400">°C</span>
+                </div>
+                
+                {Number(tempValue) > 4 && tempValue !== '' && (
+                  <p className="text-xs font-semibold text-red-600 mt-2 flex items-center gap-1">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    Warning: Temp exceeds 4°C safe limit!
+                  </p>
+                )}
+              </div>
+              
+              <button
+                onClick={handleTempSubmit}
+                disabled={!tempValue}
+                className="w-full bg-green hover:bg-greenDark text-white font-bold py-3 rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Confirm & Log Handoff
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
