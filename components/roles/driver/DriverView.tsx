@@ -17,9 +17,11 @@ import {
   Gauge,
   Thermometer,
   X,
+  TrendingDown,
 } from 'lucide-react';
-import { mockRoute, mockListings } from '@/lib/mock-data';
-import { assignListingsToHubs } from '@/services/routing/hub-assignment';
+import { mockListings } from '@/lib/mock-data';
+import { assignListingsToHubs, DEFAULT_HUBS } from '@/services/routing/hub-assignment';
+import { optimizeRouteOrder } from '@/services/routing/route-optimizer';
 import type { RouteStop } from '@/types/kisanrahi';
 import dynamic from 'next/dynamic';
 
@@ -32,7 +34,6 @@ const DynamicRouteMap = dynamic(
 const TRUCK_REG = 'BR-01-GA-9021';
 const TRUCK_TYPE = 'Eicher 14ft Reefer';
 const DRIVER_NAME = 'Minhaj Ansari';
-const ROUTE_LABEL = 'Sasaram PACS → Dehri FPO → Patna Urban Mandi';
 const MAX_PAYLOAD_KG = 2500;
 
 /* ── Status styling map ───────────────────────────────────────────────── */
@@ -81,8 +82,53 @@ function nextStatus(current: RouteStop['status']): RouteStop['status'] {
    ═════════════════════════════════════════════════════════════════════════ */
 
 export const DriverView: React.FC = () => {
+  /* ── Optimize route using nearest-neighbor heuristic ──────────────── */
+  const depot = DEFAULT_HUBS[0]; // Sasaram PACS as starting depot
+  const hubStops = DEFAULT_HUBS.slice(1); // remaining hubs as stops
+
+  const routeResult = useMemo(
+    () => optimizeRouteOrder(depot, hubStops),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  /* ── Build RouteStop[] from the optimized order ──────────────────── */
+  const initialStops: RouteStop[] = useMemo(() => {
+    // Start with the depot itself as the first stop (already loaded)
+    const depotStop: RouteStop = {
+      hubId: depot.hubId,
+      hubName: depot.hubName,
+      pickupKg: 800,
+      status: 'Completed',
+      eta: '02:10 AM',
+    };
+
+    // Remaining stops in optimized order
+    const etaList = ['02:50 AM', '03:30 AM', '04:10 AM', '04:50 AM'];
+    const optimizedStops: RouteStop[] = routeResult.optimizedOrder.map(
+      (hub, i) => ({
+        hubId: hub.hubId,
+        hubName: hub.hubName,
+        pickupKg: Math.round(hub.capacityKg * 0.4), // estimated load
+        status: 'Pending' as const,
+        eta: etaList[i] || `${String(3 + i).padStart(2, '0')}:00 AM`,
+      }),
+    );
+
+    return [depotStop, ...optimizedStops];
+  }, [depot, routeResult.optimizedOrder]);
+
+  /* ── Dynamic route label from optimized order ────────────────────── */
+  const ROUTE_LABEL = useMemo(
+    () =>
+      [depot.hubName, ...routeResult.optimizedOrder.map((h) => h.hubName)].join(
+        ' → ',
+      ),
+    [depot.hubName, routeResult.optimizedOrder],
+  );
+
   /* ── Local state for mutable stops ────────────────────────────────── */
-  const [stops, setStops] = useState<RouteStop[]>(mockRoute);
+  const [stops, setStops] = useState<RouteStop[]>(initialStops);
   const [scanningIdx, setScanningIdx] = useState<number | null>(null);
   
   /* ── Temperature Modal State ──────────────────────────────────────── */
@@ -226,13 +272,38 @@ export const DriverView: React.FC = () => {
         </div>
       </div>
 
+      {/* ─── Route Optimization Banner ──────────────────────────────── */}
+      {routeResult.distanceSavedKm > 0 && (
+        <div className="bg-gradient-to-r from-emerald-50 to-green/10 border border-green/30 rounded-xl p-4 flex items-center gap-4 shadow-sm">
+          <div className="w-12 h-12 rounded-full bg-green/15 flex items-center justify-center flex-shrink-0">
+            <TrendingDown className="w-6 h-6 text-green" />
+          </div>
+          <div className="flex-1">
+            <h4 className="font-bold text-green text-sm flex items-center gap-1.5">
+              🚛 Route Optimised by Nearest-Neighbor Algorithm
+            </h4>
+            <p className="text-xs text-gray-600 mt-0.5">
+              Optimized route saves{' '}
+              <strong className="text-green text-sm">
+                {routeResult.distanceSavedKm.toFixed(1)} km
+              </strong>{' '}
+              vs. visiting stops in listing order
+              <span className="text-gray-400 ml-1">
+                ({routeResult.optimizedDistanceKm.toFixed(1)} km optimized vs{' '}
+                {routeResult.naiveDistanceKm.toFixed(1)} km naive)
+              </span>
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ─── Route Map ─────────────────────────────────────────────── */}
       <div className="bg-white rounded-xl p-5 border border-border shadow-sm">
         <h3 className="font-bold text-navy text-lg mb-4 flex items-center gap-2">
           <MapPin className="w-5 h-5 text-saffron" />
           Live Route Tracker
         </h3>
-        <DynamicRouteMap route={stops} listings={mockListings} />
+        <DynamicRouteMap route={stops} listings={mockListings} depot={depot} optimizedHubs={routeResult.optimizedOrder} />
       </div>
 
       {/* ─── Stop-by-Stop Route Sheet ──────────────────────────────── */}

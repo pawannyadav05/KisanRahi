@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -40,13 +40,17 @@ const FARMER_ICON = L.divIcon({
 interface RouteMapProps {
   route: RouteStop[];
   listings: CropListing[];
+  /** Starting depot for the optimized route polyline */
+  depot?: HubCoordinate;
+  /** Hub stops in optimized order (used to draw the route polyline) */
+  optimizedHubs?: HubCoordinate[];
 }
 
-export default function RouteMap({ route, listings }: RouteMapProps) {
+export default function RouteMap({ route, listings, depot, optimizedHubs }: RouteMapProps) {
   // Center map around Bihar corridor
   const center: [number, number] = [24.95, 84.03]; // Near Sasaram
 
-  // Map route stops to hub coordinates
+  // Map route stops to hub coordinates for markers
   const routePoints = route.map(stop => {
     const hub = DEFAULT_HUBS.find(h => h.hubId === stop.hubId);
     return {
@@ -56,7 +60,20 @@ export default function RouteMap({ route, listings }: RouteMapProps) {
     };
   });
 
-  const polylinePositions: [number, number][] = routePoints.map(p => [p.lat, p.lng]);
+  // Build polyline: use optimized order if provided, else fall back to route stop order
+  const polylinePositions: [number, number][] = (() => {
+    if (depot && optimizedHubs && optimizedHubs.length > 0) {
+      // Draw: depot → optimized hub 1 → optimized hub 2 → …
+      return [
+        [depot.lat, depot.lng] as [number, number],
+        ...optimizedHubs.map(
+          (h) => [h.lat, h.lng] as [number, number],
+        ),
+      ];
+    }
+    // Fallback: original route stop order
+    return routePoints.map(p => [p.lat, p.lng] as [number, number]);
+  })();
 
   return (
     <div className="h-[300px] w-full rounded-xl overflow-hidden border border-border shadow-sm z-0 relative">
@@ -66,7 +83,7 @@ export default function RouteMap({ route, listings }: RouteMapProps) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* Route line connecting the hubs */}
+        {/* Route line connecting the hubs in optimized order */}
         <Polyline positions={polylinePositions} pathOptions={{ color: '#0b2545', weight: 4, opacity: 0.6, dashArray: '8 8' }} />
 
         {/* Hub Markers */}
@@ -105,3 +122,4 @@ export default function RouteMap({ route, listings }: RouteMapProps) {
     </div>
   );
 }
+
