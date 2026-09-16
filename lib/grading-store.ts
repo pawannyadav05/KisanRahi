@@ -140,6 +140,32 @@ export function lookupFarmer(id: string): FarmerRecord | null {
  *  4. After a short tick, updates the listing status to 'Pooled'
  *  5. Notifies all subscribers (Farmer view re-renders)
  */
+export function getSavedEntries(): GradedEntry[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem('kisanrahi_hub_inward_entries');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveEntriesLocally(entries: GradedEntry[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('kisanrahi_hub_inward_entries', JSON.stringify(entries));
+  } catch {}
+}
+
+/**
+ * Records a graded inward entry:
+ *  1. Creates a new CropListing (status = 'Graded') in mockListings & localStorage
+ *  2. Stores the GradeResult in mockGrades
+ *  3. Persists to database API /api/hub/entries
+ *  4. Increments the first PooledLot's totalKg (hub consolidation)
+ *  5. After a short tick, updates the listing status to 'Pooled'
+ *  6. Notifies all subscribers (Farmer view & Hub Manager view re-render)
+ */
 export function recordGradedEntry(
   farmer: FarmerRecord,
   crop: string,
@@ -166,6 +192,16 @@ export function recordGradedEntry(
     gradedAt,
   };
 
+  const newEntry: GradedEntry = {
+    listingId,
+    farmerId: farmer.id,
+    farmerName: farmer.name,
+    crop,
+    qtyKg,
+    grade: fullGrade,
+    recordedAt: gradedAt,
+  };
+
   // ── Mutate shared mock arrays so all views see the change ──
   mockListings.unshift(newListing);
   mockGrades.unshift(fullGrade);
@@ -173,6 +209,39 @@ export function recordGradedEntry(
   // Increment the hub lot's pooled weight
   if (mockPooledLots.length > 0) {
     mockPooledLots[0].totalKg += qtyKg;
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('kisanrahi_hub_lot_weight', String(mockPooledLots[0].totalKg));
+      } catch {}
+    }
+  }
+
+  // Persist locally immediately
+  if (typeof window !== 'undefined') {
+    try {
+      const existing = getSavedEntries();
+      const updated = [newEntry, ...existing.filter((e) => e.listingId !== listingId)].slice(0, 50);
+      saveEntriesLocally(updated);
+    } catch {}
+  }
+
+  // Persist to database asynchronously
+  if (typeof window !== 'undefined') {
+    fetch('/api/hub/entries', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        farmerId: farmer.id,
+        farmerName: farmer.name,
+        crop,
+        qtyKg,
+        grade: fullGrade,
+        village: farmer.village,
+        listingId,
+      }),
+    }).catch((err) => {
+      console.warn('[Store] Background DB sync warning:', err);
+    });
   }
 
   notifyAll();
@@ -186,15 +255,7 @@ export function recordGradedEntry(
     }
   }, 2000);
 
-  return {
-    listingId,
-    farmerId: farmer.id,
-    farmerName: farmer.name,
-    crop,
-    qtyKg,
-    grade: fullGrade,
-    recordedAt: gradedAt,
-  };
+  return newEntry;
 }
 
 // ─── AI Mock CV Engine ────────────────────────────────────────────────────────
