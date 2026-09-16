@@ -13,14 +13,15 @@ import {
   MapPin,
   Clock,
   ShieldCheck,
-  Plus,
   X,
   Loader2,
   User,
   Leaf,
+  Plus,
 } from 'lucide-react';
 import type { CropListing, ListingStatus, PayoutRecord } from '@/types/kisanrahi';
 import { mockPayouts } from '@/lib/mock-data';
+import { subscribeGradingStore } from '@/lib/grading-store';
 
 // ─── Status Stepper Config ──────────────────────────────────────────────────
 const STATUS_STEPS: { key: ListingStatus; label: string; icon: React.FC<{ className?: string }> }[] = [
@@ -380,6 +381,16 @@ export const FarmerView: React.FC = () => {
       loadListings(farmerId);
     }
   }, [farmerId, loadingProfile, loadListings]);
+
+  // Subscribe to grading store — re-renders when Hub Manager grades/pools a listing
+  useEffect(() => {
+    if (loadingProfile) return;
+    const unsub = subscribeGradingStore(() => {
+      // Reload per-farmer listings when Hub Manager grades/pools a batch
+      loadListings(farmerId);
+    });
+    return unsub;
+  }, [loadingProfile, farmerId, loadListings]);
 
   // Listen for profile updates from ProfileModal
   useEffect(() => {
