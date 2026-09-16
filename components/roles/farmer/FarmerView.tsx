@@ -626,8 +626,8 @@ export const FarmerView: React.FC = () => {
     const newId = `L${Date.now()}`;
     const newListing: CropListing = {
       id: newId,
-      farmerId: 'F1',
-      farmerName: 'Ramesh Yadav',
+      farmerId,
+      farmerName,
       crop: pendingListing.crop,
       qtyKg: pendingListing.qtyKg,
       expectedPricePerKg: parseFloat(farmerPrice) || 0,
@@ -636,12 +636,27 @@ export const FarmerView: React.FC = () => {
       createdAt: new Date().toISOString(),
     };
 
-    mockListings.push(newListing);
-    setListings((prev) => [newListing, ...prev]);
+    setListings((prev) => {
+      const updated = [newListing, ...prev];
+      saveCachedBatches(farmerId, updated);
+      return updated;
+    });
     setNewIds((prev) => new Set(prev).add(newId));
     flash(`Added ${pendingListing.qtyKg} kg ${pendingListing.crop} at ₹${farmerPrice}/kg`, 'success');
-    
     setPendingListing(null);
+
+    // Persist to API in background
+    fetch('/api/listings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        crop: pendingListing.crop,
+        qtyKg: pendingListing.qtyKg,
+        villageName: pendingListing.villageName,
+        farmerName,
+        expectedPricePerKg: parseFloat(farmerPrice) || 0,
+      }),
+    }).catch(() => { /* already saved locally */ });
 
     setTimeout(() => {
       setNewIds((prev) => {
@@ -650,7 +665,7 @@ export const FarmerView: React.FC = () => {
         return copy;
       });
     }, 4000);
-  }, [pendingListing, farmerPrice, flash]);
+  }, [pendingListing, farmerPrice, flash, farmerId, farmerName]);
 
   const cancelListing = () => {
     setPendingListing(null);
