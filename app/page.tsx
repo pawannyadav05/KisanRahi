@@ -28,8 +28,40 @@ interface UserSession {
 }
 
 export default function Home() {
-  const [viewMode, setViewMode] = useState<'landing' | 'app'>('landing');
-  const [currentUser, setCurrentUser] = useState<UserSession | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserSession | null>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('kisanrahi_user');
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch {}
+      }
+      const params = new URLSearchParams(window.location.search);
+      const roleParam = params.get('role') as UserRole;
+      const appParam = params.get('app');
+      if (appParam === 'true' || roleParam) {
+        const defaultRole = roleParam || 'farmer';
+        return {
+          id: defaultRole === 'farmer' ? 'F1' : 'U1',
+          name: defaultRole === 'farmer' ? 'Ramesh Yadav' : defaultRole === 'hub_manager' ? 'Vikas Sharma' : defaultRole === 'bulk_buyer' ? 'Patna Caterers' : defaultRole === 'retail_consumer' ? 'Priya Verma' : defaultRole === 'driver' ? 'Minhaj Ansari' : 'DOCA Officer',
+          phone: '9876543210',
+          role: defaultRole,
+        };
+      }
+    }
+    return null;
+  });
+
+  const [viewMode, setViewMode] = useState<'landing' | 'app'>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('app') === 'true' || params.get('role') || localStorage.getItem('kisanrahi_user')) {
+        return 'app';
+      }
+    }
+    return 'landing';
+  });
+
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [loadingSession, setLoadingSession] = useState(true);
@@ -52,29 +84,6 @@ export default function Home() {
         fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
         window.location.href = '/login';
         return;
-      }
-
-      const cachedUser = localStorage.getItem('kisanrahi_user');
-      const params = new URLSearchParams(window.location.search);
-      const appParam = params.get('app');
-      const roleParam = params.get('role') as UserRole;
-
-      if (cachedUser) {
-        try {
-          const parsed = JSON.parse(cachedUser);
-          setCurrentUser(parsed);
-          setViewMode('app');
-        } catch {}
-      } else if (appParam === 'true' || roleParam) {
-        const defaultRole = roleParam || 'farmer';
-        const defaultUser: UserSession = {
-          id: defaultRole === 'farmer' ? 'F1' : 'U1',
-          name: defaultRole === 'farmer' ? 'Ramesh Yadav' : defaultRole === 'hub_manager' ? 'Vikas Sharma' : defaultRole === 'bulk_buyer' ? 'Patna Caterers' : defaultRole === 'retail_consumer' ? 'Priya Verma' : defaultRole === 'driver' ? 'Minhaj Ansari' : 'DOCA Officer',
-          phone: '9876543210',
-          role: defaultRole,
-        };
-        setCurrentUser(defaultUser);
-        setViewMode('app');
       }
     }
 

@@ -15,6 +15,16 @@ import {
   ChevronRight,
   Menu,
   X,
+  Mic,
+  Cpu,
+  MapPin,
+  Globe2,
+  Sparkles,
+  Tractor,
+  Warehouse,
+  ShoppingBag,
+  ShoppingCart,
+  Lock,
 } from 'lucide-react';
 import type { UserRole } from '@/types/kisanrahi';
 
@@ -511,7 +521,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             Transparent sourcing. Pooled demand. Smarter movement.
           </p>
 
-<<<<<<< HEAD
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
               <div className="text-3xl sm:text-4xl font-black text-blue-400">28.2%</div>
               <div className="text-xs font-semibold text-slate-300 mt-1">Consumer Price Drop</div>
@@ -764,60 +774,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </button>
             <button onClick={onOpenAuth} className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors">
               Sign In / Auth
-=======
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3 reveal reveal-delay-2">
-            <button
-              onClick={onOpenAuth}
-              className="px-6 py-3 rounded-lg bg-green text-white font-bold text-sm hover:bg-greenDark transition-colors shadow-sm flex items-center gap-2"
-            >
-              Join KisanRahi
-              <ArrowRight className="w-4 h-4" />
             </button>
-            <button
-              onClick={() => scrollTo('roles')}
-              className="px-6 py-3 rounded-lg bg-white/10 text-white font-bold text-sm border border-white/20 hover:bg-white/20 transition-colors flex items-center gap-2"
-            >
-              Explore Platform
-              <ChevronRight className="w-4 h-4" />
->>>>>>> origin/main
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ── FOOTER ────────────────────────────────────────────────── */}
-      <footer className="py-10 bg-navy border-t border-navyLight text-sm">
-        <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            {/* Brand */}
-            <div>
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-green to-saffron flex items-center justify-center font-extrabold text-xs text-white">
-                  KR
-                </div>
-                <span className="font-bold text-white text-[15px]">KisanRahi</span>
-              </div>
-              <p className="text-xs text-slate-400 max-w-xs">
-                Direct Farm-to-Buyer Pooling &amp; Voice Logistics Platform
-              </p>
-            </div>
-
-            {/* Nav Links */}
-            <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-400 font-medium">
-              <button onClick={() => scrollTo('top')} className="hover:text-white transition-colors">Home</button>
-              <button onClick={() => scrollTo('how-it-works')} className="hover:text-white transition-colors">How It Works</button>
-              <button onClick={() => onEnterApp('farmer')} className="hover:text-white transition-colors">Farmer</button>
-              <button onClick={() => onEnterApp('bulk_buyer')} className="hover:text-white transition-colors">B2B</button>
-              <button onClick={() => onEnterApp('retail_consumer')} className="hover:text-white transition-colors">B2C</button>
-              <button onClick={() => onEnterApp('driver')} className="hover:text-white transition-colors">Logistics</button>
-              <button onClick={() => scrollTo('how-it-works')} className="hover:text-white transition-colors">About</button>
-            </div>
-          </div>
-
-          {/* Bottom */}
-          <div className="mt-8 pt-5 border-t border-navyLight/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
-            <span>&copy; 2026 KisanRahi &bull; All rights reserved.</span>
-            <span>Not an official Government of India website.</span>
           </div>
         </div>
       </footer>
