@@ -31,7 +31,7 @@ const DynamicRouteMap = dynamic(
 /* ── Driver / Vehicle mock identity ───────────────────────────────────── */
 const TRUCK_REG = 'BR-01-GA-9021';
 const TRUCK_TYPE = 'Eicher 14ft Reefer';
-const DRIVER_NAME = 'Minhaj Ansari';
+const DRIVER_NAME = 'Piyush Singh';
 const ROUTE_LABEL = 'Sasaram PACS → Dehri FPO → Patna Urban Mandi';
 const MAX_PAYLOAD_KG = 2500;
 
