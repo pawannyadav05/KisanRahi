@@ -399,6 +399,7 @@ export const FarmerView: React.FC = () => {
     return unsub;
   }, []);
   const [voiceError, setVoiceError] = useState<string>('');
+  const [manualText, setManualText] = useState<string>('');
   const [showToast, setShowToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const recognitionRef = useRef<any>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -508,7 +509,8 @@ export const FarmerView: React.FC = () => {
 
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-IN';
-    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.interimResults = false;
     recognition.maxAlternatives = 1;
     recognitionRef.current = recognition;
 
@@ -534,7 +536,7 @@ export const FarmerView: React.FC = () => {
 
     recognition.onerror = (event: any) => {
       if (event.error === 'network') {
-        setVoiceError('Speech network error: unable to reach speech recognition server. Check internet or try speaking again.');
+        setVoiceError('Speech network error: unable to connect to speech recognition server. Try speaking again or type your note below.');
       } else if (event.error === 'not-allowed' || event.error === 'permission-denied') {
         setVoiceError('Microphone permission denied. Please allow microphone access in your browser settings.');
       } else if (event.error === 'no-speech') {
@@ -603,9 +605,40 @@ export const FarmerView: React.FC = () => {
               Voice Listing
             </h3>
             <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-              Tap mic and say crop, quantity, village &amp; price:<br />
-              <em className="text-navy font-semibold">&quot;200 kg tomato from Sasaram at 35 rupees&quot;</em>
+              Tap mic and speak: <em className="text-navy font-semibold">&quot;200 kg tomato from Sasaram at 35 rupees&quot;</em>
             </p>
+
+            {/* Quick manual typing fallback for accessibility & network-restricted environments */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!manualText.trim()) return;
+                const parsed = parseVoiceTranscript(manualText);
+                if (parsed) {
+                  addListingFromVoice(parsed);
+                  setManualText('');
+                  setVoiceError('');
+                } else {
+                  flash('Could not parse. Example: "200 kg tomato from Sasaram at 35 rupees"', 'error');
+                }
+              }}
+              className="mt-3 flex items-center gap-2"
+            >
+              <input
+                type="text"
+                value={manualText}
+                onChange={(e) => setManualText(e.target.value)}
+                placeholder='Or type e.g. 200 kg tomato sasaram at 35'
+                className="flex-1 text-xs border border-border rounded-xl px-3 py-2 outline-none focus:border-saffron focus:ring-2 focus:ring-saffron/20 bg-canvas text-navy"
+              />
+              <button
+                type="submit"
+                disabled={!manualText.trim()}
+                className="bg-navy hover:bg-navyLight text-white text-xs font-semibold px-3 py-2 rounded-xl disabled:opacity-40 transition-colors cursor-pointer"
+              >
+                Send
+              </button>
+            </form>
           </div>
 
           {/* Transcript display area */}
