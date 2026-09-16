@@ -36,6 +36,9 @@ import {
   lookupFarmer,
   runAIGrading,
   recordGradedEntry,
+  getSavedEntries,
+  saveEntriesLocally,
+  subscribeGradingStore,
   type FarmerRecord,
   type AIGradeReport,
   type GradedEntry,
@@ -90,14 +93,75 @@ export const HubManagerView: React.FC = () => {
   const [scanProgress, setScanProgress]   = useState(0);
 
   // Entry log
-  const [entryLog, setEntryLog]           = useState<GradedEntry[]>([]);
+  const [entryLog, setEntryLog]           = useState<GradedEntry[]>(() => getSavedEntries());
 
   // Lot / dispatch state
-  const [lot, setLot] = useState<PooledLot>(() => ({ ...mockPooledLots[0] }));
+  const [lot, setLot] = useState<PooledLot>(() => {
+    const base = { ...mockPooledLots[0] };
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('kisanrahi_hub_lot_weight');
+        if (saved) {
+          const num = parseFloat(saved);
+          if (!isNaN(num) && num > 0) {
+            base.totalKg = num;
+            mockPooledLots[0].totalKg = num;
+          }
+        }
+      } catch {}
+    }
+    return base;
+  });
   const [gatePass, setGatePass]           = useState<GatePass | null>(null);
   const [gatePassError, setGatePassError] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load persisted entries from API & local cache on mount
+  useEffect(() => {
+    // 1. Initial hydration from local storage
+    if (typeof window !== 'undefined') {
+      const local = getSavedEntries();
+      if (local.length > 0) {
+        setEntryLog(local);
+      }
+    }
+
+    // 2. Fetch from Database API
+    fetch('/api/hub/entries')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.entries && Array.isArray(data.entries) && data.entries.length > 0) {
+          setEntryLog((prev) => {
+            const map = new Map<string, GradedEntry>();
+            // Add DB entries first
+            data.entries.forEach((e: GradedEntry) => map.set(e.listingId, e));
+            // Add local entries
+            prev.forEach((e: GradedEntry) => {
+              if (!map.has(e.listingId)) map.set(e.listingId, e);
+            });
+            const merged = Array.from(map.values()).sort(
+              (a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()
+            );
+            saveEntriesLocally(merged);
+            return merged;
+          });
+        }
+      })
+      .catch((err) => {
+        console.warn('[HubManager] fetch entries error:', err);
+      });
+
+    // 3. Subscribe to store changes
+    const unsub = subscribeGradingStore(() => {
+      const local = getSavedEntries();
+      if (local.length > 0) {
+        setEntryLog(local);
+      }
+    });
+
+    return () => unsub();
+  }, []);
 
   // Keep lot in sync with mockPooledLots[0] whenever recordGradedEntry mutates it
   useEffect(() => {
@@ -113,6 +177,18 @@ export const HubManagerView: React.FC = () => {
     }, 500);
     return () => clearInterval(interval);
   }, []);
+
+  // Listen for real-time farmer profile updates
+  useEffect(() => {
+    const handleProfileUpdated = (e: any) => {
+      if (farmer && e.detail) {
+        const refreshed = lookupFarmer(farmer.id);
+        if (refreshed) setFarmer(refreshed);
+      }
+    };
+    window.addEventListener('kisanrahi_profile_updated', handleProfileUpdated);
+    return () => window.removeEventListener('kisanrahi_profile_updated', handleProfileUpdated);
+  }, [farmer]);
 
   const evaluatedLot = useMemo(() => evaluateDispatchReadiness(lot), [lot]);
   const fillPct      = Math.min(100, (evaluatedLot.totalKg / evaluatedLot.capacityKg) * 100);
@@ -192,7 +268,7 @@ export const HubManagerView: React.FC = () => {
       uniformityPct: aiReport.uniformityPct,
       damagePct: aiReport.damagePct,
     });
-    setEntryLog((prev) => [entry, ...prev.slice(0, 9)]);
+    setEntryLog((prev) => [entry, ...prev.filter((e) => e.listingId !== entry.listingId)].slice(0, 50));
     setStep('result');
   }, [farmer, aiReport, cropType, weightKg]);
 
@@ -327,7 +403,12 @@ export const HubManagerView: React.FC = () => {
                     {DEMO_FARMERS.map((f) => (
                       <button
                         key={f.id}
-                        onClick={() => { setFarmerIdInput(f.id); setFarmer(f); setStep('crop'); }}
+                        onClick={() => {
+                          const resolved = lookupFarmer(f.id) || f;
+                          setFarmerIdInput(resolved.id);
+                          setFarmer(resolved);
+                          setStep('crop');
+                        }}
                         className="px-2 py-1 text-[11px] font-bold rounded-md bg-navy/5 hover:bg-saffron/10 text-navy hover:text-saffronDark border border-border hover:border-saffron/30 transition-all"
                       >
                         {f.id}

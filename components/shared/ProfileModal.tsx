@@ -131,14 +131,39 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to update profile');
 
-      setFeedback({ type: 'success', text: 'Profile updated successfully!' });
+      setFeedback({ type: 'success', text: '✅ Profile saved! Dashboard updating...' });
       if (data.profile) {
         setProfile(data.profile);
         if (onProfileUpdated) onProfileUpdated(data.profile);
+        // Fire a global event so FarmerView + GovHeader + HubManager + page.tsx react instantly
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('kisanrahi_profile_updated', { detail: data.profile }));
+          // Also update localStorage cache
+          const cached = localStorage.getItem('kisanrahi_user');
+          if (cached) {
+            try {
+              const parsed = JSON.parse(cached);
+              Object.assign(parsed, {
+                name: data.profile.name || parsed.name,
+                village: data.profile.village || parsed.village,
+                address: data.profile.address || parsed.address,
+                district: data.profile.district || parsed.district,
+                state: data.profile.state || parsed.state,
+                phone: data.profile.phone || parsed.phone,
+              });
+              localStorage.setItem('kisanrahi_user', JSON.stringify(parsed));
+            } catch {}
+          }
+          if (data.profile.id) {
+            localStorage.setItem(`kisanrahi_farmer_profile_${data.profile.id}`, JSON.stringify(data.profile));
+          }
+        }
       }
+      // Auto-close modal after a brief moment so dashboard is visible
       setTimeout(() => {
         setFeedback(null);
-      }, 3000);
+        onClose();
+      }, 1500);
     } catch (err: any) {
       setFeedback({ type: 'error', text: err.message || 'Error updating profile' });
     } finally {
@@ -158,7 +183,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6">
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
       <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-6 py-4 bg-slate-800/90 border-b border-slate-700 flex items-center justify-between">

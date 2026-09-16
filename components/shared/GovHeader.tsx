@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   Wifi,
@@ -45,6 +45,22 @@ export const GovHeader: React.FC<GovHeaderProps> = ({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click anywhere on dashboard
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [showDropdown]);
 
   useEffect(() => {
     setIsOnline(typeof navigator !== 'undefined' ? navigator.onLine : true);
@@ -55,29 +71,71 @@ export const GovHeader: React.FC<GovHeaderProps> = ({
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    // Sync from localStorage first to prevent mismatched state
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('kisanrahi_user');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          setSession(parsed);
+        } catch {}
+      }
+    }
+
     // Check user session
     fetch('/api/auth/me')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.authenticated && data?.user) {
           setSession(data.user);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('kisanrahi_user', JSON.stringify(data.user));
+          }
+        } else if (!localStorage.getItem('kisanrahi_user')) {
+          setSession(null);
         }
       })
       .catch(() => {});
 
+    // Listen for profile updates
+    const handleProfileUpdate = (e: any) => {
+      if (e.detail) {
+        setSession((prev) => (prev ? { ...prev, name: e.detail.name || prev.name } : null));
+      }
+    };
+    window.addEventListener('kisanrahi_profile_updated', handleProfileUpdate);
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('kisanrahi_profile_updated', handleProfileUpdate);
     };
   }, []);
 
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
-      setSession(null);
-      setShowDropdown(false);
-      window.location.href = '/login';
     } catch {}
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('kisanrahi_user');
+      sessionStorage.removeItem('kr_session_active');
+    }
+    setSession(null);
+    setShowDropdown(false);
+    window.location.href = '/login';
+  };
+
+  const handleSwitchRole = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {}
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('kisanrahi_user');
+      sessionStorage.removeItem('kr_session_active');
+    }
+    setSession(null);
+    setShowDropdown(false);
+    window.location.href = '/login';
   };
 
   const handleLangToggle = (lang: Language) => {
@@ -240,7 +298,7 @@ export const GovHeader: React.FC<GovHeaderProps> = ({
           {/* User Session / Auth Quick Action */}
           <div className="flex items-center space-x-3">
             {session ? (
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
                   className="flex items-center gap-2 bg-navyLight/90 hover:bg-navyLight border border-slate-600 px-3 py-1.5 rounded-xl text-xs transition-all shadow-sm"
@@ -261,7 +319,7 @@ export const GovHeader: React.FC<GovHeaderProps> = ({
 
                 {/* Dropdown Menu */}
                 {showDropdown && (
-                  <div className="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-2 z-50 text-xs">
+                  <div className="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-2 z-50 text-xs animate-[fadeIn_0.15s_ease-out]">
                     <div className="px-3 py-2 border-b border-slate-800">
                       <div className="font-bold text-white truncate">{session.name}</div>
                       <div className="text-[11px] text-slate-400">{session.phone}</div>
@@ -287,14 +345,13 @@ export const GovHeader: React.FC<GovHeaderProps> = ({
                       Full Account Settings
                     </Link>
 
-                    <Link
-                      href="/login"
-                      onClick={() => setShowDropdown(false)}
-                      className="w-full px-3 py-2 text-left text-slate-200 hover:bg-slate-800 flex items-center gap-2 transition-colors"
+                    <button
+                      onClick={handleSwitchRole}
+                      className="w-full px-3 py-2 text-left text-amber-300 hover:bg-slate-800 flex items-center gap-2 transition-colors"
                     >
                       <LogIn className="w-4 h-4 text-amber-400" />
                       Switch Role / Demo Account
-                    </Link>
+                    </button>
 
                     <div className="border-t border-slate-800 mt-1 pt-1">
                       <button

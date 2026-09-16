@@ -11,7 +11,14 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#081B33]">
       <AuthModal 
         isOpen={true} 
-        onClose={() => router.push('/')} 
+        onClose={() => router.push('/')}
+        onSuccess={(user) => {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('kisanrahi_user', JSON.stringify(user));
+            sessionStorage.setItem('kr_session_active', '1');
+            window.location.href = '/?app=true';
+          }
+        }}
       />
     </div>
   );

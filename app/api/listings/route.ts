@@ -4,9 +4,14 @@ import { getCurrentUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const listings = await getListings();
+    const { searchParams } = new URL(request.url);
+    const farmerId = searchParams.get('farmerId');
+    let listings = await getListings();
+    if (farmerId) {
+      listings = listings.filter((l) => l.farmerId === farmerId);
+    }
     return NextResponse.json({ success: true, listings });
   } catch (error: any) {
     return NextResponse.json(

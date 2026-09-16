@@ -43,7 +43,7 @@ const FALLBACK_USERS: Record<string, any> = {
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (role: UserRole) => void;
+  onSuccess?: (user: any) => void;
 }
 
 const GoogleIcon = () => (
@@ -87,6 +87,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
 
   if (!isOpen) return null;
 
+  const handleAuthSuccess = (user: any) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kisanrahi_user', JSON.stringify(user));
+      sessionStorage.setItem('kr_session_active', '1');
+    }
+    onClose();
+    if (onSuccess) onSuccess(user);
+  };
+
   const handleLoginSubmit = async (phoneToLogin: string, pwdToLogin: string, e?: React.FormEvent) => {
     e?.preventDefault();
     setLoading(true);
@@ -99,12 +108,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Invalid credentials');
-      setSuccess(`Welcome, ${data.user.name}! Redirecting...`);
+      setSuccess(`Welcome, ${data.user.name}! Redirecting to Dashboard...`);
       setTimeout(() => {
-        onClose();
-        if (onSuccess) onSuccess(data.user.role);
-        window.location.href = `/?role=${data.user.role}&app=true`;
-      }, 400);
+        handleAuthSuccess(data.user);
+      }, 50);
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {
@@ -129,10 +136,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
       if (!res.ok) throw new Error(data.error || 'Google auth failed');
       setSuccess(`Signed in with Google! Redirecting...`);
       setTimeout(() => {
-        onClose();
-        if (onSuccess) onSuccess(data.user.role);
-        window.location.href = `/?role=${data.user.role}&app=true`;
-      }, 400);
+        handleAuthSuccess(data.user);
+      }, 50);
     } catch (err: any) {
       setError(err.message || 'Google authentication failed');
     } finally {
@@ -154,10 +159,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
       if (!res.ok) throw new Error(data.error || 'Signup failed');
       setSuccess(`Account created! Redirecting...`);
       setTimeout(() => {
-        onClose();
-        if (onSuccess) onSuccess(data.user.role);
-        window.location.href = `/?role=${data.user.role}&app=true`;
-      }, 400);
+        handleAuthSuccess(data.user);
+      }, 50);
     } catch (err: any) {
       setError(err.message || 'Signup failed');
     } finally {

@@ -15,6 +15,16 @@ import {
   ChevronRight,
   Menu,
   X,
+  Mic,
+  Cpu,
+  MapPin,
+  Globe2,
+  Sparkles,
+  Tractor,
+  Warehouse,
+  ShoppingBag,
+  ShoppingCart,
+  Lock,
 } from 'lucide-react';
 import type { UserRole } from '@/types/kisanrahi';
 
@@ -221,13 +231,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               >
                 Get Started
                 <ArrowRight className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => scrollTo('how-it-works')}
-                className="px-6 py-3 rounded-lg bg-white text-navy font-bold text-sm border border-slate-300 hover:border-navy/30 hover:bg-slate-50 transition-colors flex items-center gap-2"
-              >
-                See How It Works
-                <ArrowDown className="w-4 h-4" />
               </button>
             </div>
 
@@ -518,58 +521,260 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             Transparent sourcing. Pooled demand. Smarter movement.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3 reveal reveal-delay-2">
-            <button
-              onClick={onOpenAuth}
-              className="px-6 py-3 rounded-lg bg-green text-white font-bold text-sm hover:bg-greenDark transition-colors shadow-sm flex items-center gap-2"
-            >
-              Join KisanRahi
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => scrollTo('roles')}
-              className="px-6 py-3 rounded-lg bg-white/10 text-white font-bold text-sm border border-white/20 hover:bg-white/20 transition-colors flex items-center gap-2"
-            >
-              Explore Platform
-              <ChevronRight className="w-4 h-4" />
-            </button>
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
+              <div className="text-3xl sm:text-4xl font-black text-blue-400">28.2%</div>
+              <div className="text-xs font-semibold text-slate-300 mt-1">Consumer Price Drop</div>
+              <div className="text-[11px] text-slate-500 mt-0.5">Direct Farm Fresh Produce</div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
+              <div className="text-3xl sm:text-4xl font-black text-amber-400">&lt; 2.8%</div>
+              <div className="text-xs font-semibold text-slate-300 mt-1">Corridor Transit Loss</div>
+              <div className="text-[11px] text-slate-500 mt-0.5">Cold chain & optimal routing</div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
+              <div className="text-3xl sm:text-4xl font-black text-purple-400">412+</div>
+              <div className="text-xs font-semibold text-slate-300 mt-1">Active PACS Hubs</div>
+              <div className="text-[11px] text-slate-500 mt-0.5">Bihar Corridor Network</div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── FOOTER ────────────────────────────────────────────────── */}
-      <footer className="py-10 bg-navy border-t border-navyLight text-sm">
-        <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            {/* Brand */}
-            <div>
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-green to-saffron flex items-center justify-center font-extrabold text-xs text-white">
-                  KR
+      {/* ─── How KisanRahi Works Pipeline ─────────────────────────────────── */}
+      <section className="py-16 bg-slate-950 border-b border-slate-800 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h2 className="text-xs font-bold text-emerald-400 uppercase tracking-widest">
+              End-to-End Architecture
+            </h2>
+            <p className="text-2xl sm:text-3xl font-black text-white mt-1">
+              How KisanRahi Powers the Supply Chain
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Step 1 */}
+            <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-emerald-500/50 transition-all flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4 font-bold">
+                  <Mic className="w-6 h-6" />
                 </div>
-                <span className="font-bold text-white text-[15px]">KisanRahi</span>
+                <div className="text-xs font-bold text-emerald-400 uppercase">Step 01</div>
+                <h3 className="text-lg font-bold text-white mt-1">Voice & WhatsApp Listing</h3>
+                <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                  Farmers speak in Bhojpuri or Hindi: <em>&ldquo;Hamaar 200 kilo tamatar baa&rdquo;</em>. AI parses crop, qty, and village, generating a live listing automatically.
+                </p>
               </div>
-              <p className="text-xs text-slate-400 max-w-xs">
-                Direct Farm-to-Buyer Pooling &amp; Voice Logistics Platform
+              <div className="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-500 flex items-center gap-1">
+                <Cpu className="w-3.5 h-3.5 text-emerald-400" /> Bhashini AI Speech Engine
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-teal-500/50 transition-all flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 mb-4 font-bold">
+                  <MapPin className="w-6 h-6" />
+                </div>
+                <div className="text-xs font-bold text-teal-400 uppercase">Step 02</div>
+                <h3 className="text-lg font-bold text-white mt-1">PostGIS Micro-Hub Pooling</h3>
+                <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                  PostGIS spatial queries automatically map the produce to the nearest PACS/FPO collection point. Grade A/B/C lots are dynamically pooled into dispatch-ready batches.
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-500 flex items-center gap-1">
+                <Globe2 className="w-3.5 h-3.5 text-teal-400" /> PostgreSQL 17 + PostGIS 3.3
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-amber-500/50 transition-all flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-4 font-bold">
+                  <Lock className="w-6 h-6" />
+                </div>
+                <div className="text-xs font-bold text-amber-400 uppercase">Step 03</div>
+                <h3 className="text-lg font-bold text-white mt-1">Escrow & Milk-Run Dispatch</h3>
+                <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                  Buyers lock funds in smart escrow. Drivers receive dynamic routing for multi-point pickup. On weighbridge QR scan, instant UPI DBT settles to farmer accounts.
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-500 flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Smart Escrow + RazorpayX DBT
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 6 Stakeholder Role Portals (RBAC Protected) ─────────────────── */}
+      <section className="py-16 bg-slate-900/60 border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h2 className="text-xs font-bold text-emerald-400 uppercase tracking-widest">
+              Role-Based Access Control (RBAC) Architecture
+            </h2>
+            <p className="text-2xl sm:text-3xl font-black text-white mt-1">
+              Secure Role Portals for Every Stakeholder
+            </p>
+            <p className="text-xs text-slate-400 mt-2">
+              Access is strictly restricted by authenticated user role. Sign in to launch your assigned view.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {/* 1. Farmer */}
+            <div
+              onClick={onOpenAuth}
+              className="group p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-emerald-500/60 hover:bg-slate-850 cursor-pointer transition-all shadow-md hover:shadow-xl relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-green-600/20 border border-green-500/40 text-green-400">
+                  <Tractor className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  Sign In <ChevronRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <h4 className="text-base font-bold text-white group-hover:text-emerald-300 transition-colors">
+                View A — Farmer Dashboard
+              </h4>
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                Voice listing, AI crop grading scores, guaranteed MSP realization rate, and live pooled lot tracking.
               </p>
             </div>
 
-            {/* Nav Links */}
-            <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-400 font-medium">
-              <button onClick={() => scrollTo('top')} className="hover:text-white transition-colors">Home</button>
-              <button onClick={() => scrollTo('how-it-works')} className="hover:text-white transition-colors">How It Works</button>
-              <button onClick={() => onEnterApp('farmer')} className="hover:text-white transition-colors">Farmer</button>
-              <button onClick={() => onEnterApp('bulk_buyer')} className="hover:text-white transition-colors">B2B</button>
-              <button onClick={() => onEnterApp('retail_consumer')} className="hover:text-white transition-colors">B2C</button>
-              <button onClick={() => onEnterApp('driver')} className="hover:text-white transition-colors">Logistics</button>
-              <button onClick={() => scrollTo('how-it-works')} className="hover:text-white transition-colors">About</button>
+            {/* 2. Hub Manager */}
+            <div
+              onClick={onOpenAuth}
+              className="group p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-teal-500/60 hover:bg-slate-850 cursor-pointer transition-all shadow-md hover:shadow-xl relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-teal-600/20 border border-teal-500/40 text-teal-400">
+                  <Warehouse className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold text-teal-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  Sign In <ChevronRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <h4 className="text-base font-bold text-white group-hover:text-teal-300 transition-colors">
+                View B — Hub Manager (PACS)
+              </h4>
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                Incoming lot weighment scanner, batch consolidation, real-time inventory levels, and dispatch staging.
+              </p>
+            </div>
+
+            {/* 3. Bulk Buyer */}
+            <div
+              onClick={onOpenAuth}
+              className="group p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-blue-500/60 hover:bg-slate-850 cursor-pointer transition-all shadow-md hover:shadow-xl relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-blue-600/20 border border-blue-500/40 text-blue-400">
+                  <ShoppingBag className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold text-blue-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  Sign In <ChevronRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <h4 className="text-base font-bold text-white group-hover:text-blue-300 transition-colors">
+                View C — Bulk Buyer (B2B)
+              </h4>
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                Order full 10-tonne aggregated lots, lock payment in escrow, and track temperature-controlled delivery.
+              </p>
+            </div>
+
+            {/* 4. Retail Consumer */}
+            <div
+              onClick={onOpenAuth}
+              className="group p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-purple-500/60 hover:bg-slate-850 cursor-pointer transition-all shadow-md hover:shadow-xl relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-purple-600/20 border border-purple-500/40 text-purple-400">
+                  <ShoppingCart className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold text-purple-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  Sign In <ChevronRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <h4 className="text-base font-bold text-white group-hover:text-purple-300 transition-colors">
+                View D — Retail Consumer (B2C)
+              </h4>
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                Community group-buying with 28% direct savings, harvest provenance QR verification, and doorstep drops.
+              </p>
+            </div>
+
+            {/* 5. Driver */}
+            <div
+              onClick={onOpenAuth}
+              className="group p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-amber-500/60 hover:bg-slate-850 cursor-pointer transition-all shadow-md hover:shadow-xl relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-amber-600/20 border border-amber-500/40 text-amber-400">
+                  <Truck className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  Sign In <ChevronRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <h4 className="text-base font-bold text-white group-hover:text-amber-300 transition-colors">
+                View E — Logistics Driver
+              </h4>
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                Dynamic milk-run multi-hub waypoint route navigation with digital QR manifest pickup and weighment logs.
+              </p>
+            </div>
+
+            {/* 6. DoCA Admin */}
+            <div
+              onClick={onOpenAuth}
+              className="group p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-red-500/60 hover:bg-slate-850 cursor-pointer transition-all shadow-md hover:shadow-xl relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-red-600/20 border border-red-500/40 text-red-400">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold text-red-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  Sign In <ChevronRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <h4 className="text-base font-bold text-white group-hover:text-red-300 transition-colors">
+                View F — DoCA Central Radar
+              </h4>
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                National price stabilization radar, artificial hoarding anomaly detection, dynamic MSP buffers, and state feeds.
+              </p>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Bottom */}
-          <div className="mt-8 pt-5 border-t border-navyLight/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
-            <span>&copy; 2026 KisanRahi &bull; All rights reserved.</span>
-            <span>Not an official Government of India website.</span>
+      {/* ─── Footer ───────────────────────────────────────────────────────── */}
+      <footer className="py-10 bg-slate-950 border-t border-slate-800 text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-6 h-6 rounded bg-gradient-to-tr from-green to-saffron flex items-center justify-center font-bold text-white text-[10px]">
+              KR
+            </div>
+            <span className="text-slate-300 font-bold">KisanRahi Platform</span>
+            <span>• Government of India / DoCA Initiative</span>
+          </div>
+          <div className="flex items-center space-x-4">
+            <button onClick={onOpenAuth} className="hover:text-slate-300 transition-colors">
+              Farmer Portal
+            </button>
+            <button onClick={onOpenAuth} className="hover:text-slate-300 transition-colors">
+              DoCA Command
+            </button>
+            <button onClick={onOpenAuth} className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors">
+              Sign In / Auth
+            </button>
           </div>
         </div>
       </footer>
