@@ -1055,7 +1055,7 @@ export const RetailConsumerView = () => {
 
         {/* Footer info note */}
         <footer className="p-3.5 text-center text-[10px] text-slate-400 border-t border-slate-200/60 bg-white/50">
-          KisanRahi SIH Hackathon • View D Retail Consumer Society Hub
+          KisanRahi • Retail Consumer Society Hub
         </footer>
       </div>
     </div>

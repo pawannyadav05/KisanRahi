@@ -24,7 +24,7 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({ currentRole, onRoleS
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
         <div className="flex items-center space-x-2 text-xs font-semibold text-gray-300 uppercase tracking-wider">
           <span className="w-2 h-2 rounded-full bg-saffron animate-ping" />
-          <span>Hackathon Demo Role Switcher:</span>
+          <span>Demo Role Switcher:</span>
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-1.5 w-full sm:w-auto">
