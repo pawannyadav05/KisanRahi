@@ -13,6 +13,7 @@ export interface CropListing {
   farmerName: string;
   crop: string;
   qtyKg: number;
+  expectedPricePerKg?: number; // Optional until all listings have it
   location: { lat: number; lng: number; villageName: string };
   status: ListingStatus;
   createdAt: string; // ISO timestamp
