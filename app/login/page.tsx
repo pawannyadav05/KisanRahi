@@ -86,10 +86,13 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Login failed');
 
-      setSuccess(`Authenticated as ${data.user.name}! Launching ${data.user.role} view...`);
+      setSuccess(`Authenticated as ${data.user.name}! Launching dashboard...`);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('kisanrahi_user', JSON.stringify(data.user));
+      }
       setTimeout(() => {
-        window.location.href = `/?role=${data.user.role}&app=true`;
-      }, 400);
+        window.location.href = `/?app=true`;
+      }, 100);
     } catch (err: any) {
       setError(err.message || 'Demo login failed');
     } finally {
@@ -115,9 +118,12 @@ export default function LoginPage() {
       if (!res.ok) throw new Error(data.error || 'Google auth failed');
 
       setSuccess(`Signed in with Google as ${data.user.name}! Launching dashboard...`);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('kisanrahi_user', JSON.stringify(data.user));
+      }
       setTimeout(() => {
-        window.location.href = `/?role=${data.user.role}&app=true`;
-      }, 400);
+        window.location.href = `/?app=true`;
+      }, 100);
     } catch (err: any) {
       setError(err.message || 'Google authentication failed');
     } finally {
@@ -139,10 +145,13 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Invalid credentials');
 
-      setSuccess(`Welcome back, ${data.user.name}! Redirecting to ${data.user.role} dashboard...`);
+      setSuccess(`Welcome back, ${data.user.name}! Redirecting to dashboard...`);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('kisanrahi_user', JSON.stringify(data.user));
+      }
       setTimeout(() => {
-        window.location.href = `/?role=${data.user.role}&app=true`;
-      }, 400);
+        window.location.href = `/?app=true`;
+      }, 100);
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {
@@ -165,9 +174,12 @@ export default function LoginPage() {
       if (!res.ok) throw new Error(data.error || 'Signup failed');
 
       setSuccess(`Account registered for ${data.user.name}! Launching view...`);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('kisanrahi_user', JSON.stringify(data.user));
+      }
       setTimeout(() => {
-        window.location.href = `/?role=${data.user.role}&app=true`;
-      }, 400);
+        window.location.href = `/?app=true`;
+      }, 100);
     } catch (err: any) {
       setError(err.message || 'Signup failed');
     } finally {

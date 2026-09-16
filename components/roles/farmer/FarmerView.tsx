@@ -16,9 +16,11 @@ import {
   Plus,
   X,
   Loader2,
+  User,
+  Leaf,
 } from 'lucide-react';
 import type { CropListing, ListingStatus, PayoutRecord } from '@/types/kisanrahi';
-import { mockListings, mockPayouts } from '@/lib/mock-data';
+import { mockPayouts } from '@/lib/mock-data';
 
 // ─── Status Stepper Config ──────────────────────────────────────────────────
 const STATUS_STEPS: { key: ListingStatus; label: string; icon: React.FC<{ className?: string }> }[] = [
@@ -33,28 +35,23 @@ function stepIndex(status: ListingStatus): number {
 }
 
 // ─── Voice Parser ───────────────────────────────────────────────────────────
-// Extracts crop, qty (kg), and village from a natural speech transcript.
-// Handles patterns like "200 kg tomato from sasaram" or "tomato 300 kilo sasaram village"
 function parseVoiceTranscript(raw: string): { crop: string; qtyKg: number; villageName: string } | null {
   const text = raw.toLowerCase().trim();
 
-  // Match a number optionally followed by kg/kilo/kilogram
   const qtyMatch = text.match(/(\d+)\s*(?:kg|kilo|kilogram)?/);
   const qtyKg = qtyMatch ? parseInt(qtyMatch[1], 10) : NaN;
   if (isNaN(qtyKg) || qtyKg <= 0) return null;
 
-  // Common crop names we recognise (extendable)
   const knownCrops = [
     'tomato', 'potato', 'onion', 'wheat', 'rice', 'mango',
     'banana', 'brinjal', 'cabbage', 'cauliflower', 'spinach',
-    'chili', 'capsicum', 'carrot', 'peas', 'okra', 'ladyfinger',
-    'soybean', 'mustard', 'sugarcane', 'maize', 'corn',
-    'tamatar', 'aloo', 'pyaz', 'gehu', 'chawal', 'aam',
+    'chili', 'chilli', 'capsicum', 'carrot', 'peas', 'okra', 'ladyfinger',
+    'soybean', 'mustard', 'sugarcane', 'maize', 'corn', 'garlic',
+    'paddy', 'green peas', 'tamatar', 'aloo', 'pyaz', 'gehu', 'chawal', 'aam',
   ];
   const crop = knownCrops.find((c) => text.includes(c));
   if (!crop) return null;
 
-  // Extract village — look for "from <village>" or last word(s) not matched
   const villageMatch = text.match(/(?:from|village|gaon|gaaon)\s+([a-z\s]+)/);
   const villageName = villageMatch
     ? villageMatch[1].trim().replace(/\b\w/g, (c) => c.toUpperCase())
@@ -80,7 +77,6 @@ const StatusStepper: React.FC<{ currentStatus: ListingStatus }> = ({ currentStat
 
         return (
           <React.Fragment key={step.key}>
-            {/* Step dot + label */}
             <div className="flex flex-col items-center flex-shrink-0">
               <div
                 className={`
@@ -104,7 +100,6 @@ const StatusStepper: React.FC<{ currentStatus: ListingStatus }> = ({ currentStat
               </span>
             </div>
 
-            {/* Connector line */}
             {i < STATUS_STEPS.length - 1 && (
               <div className="flex-1 mx-1">
                 <div
@@ -137,7 +132,7 @@ const CropBatchCard: React.FC<{ listing: CropListing; isNew?: boolean }> = ({ li
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3 min-h-[52px]">
           <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-green/15 to-green/5 flex items-center justify-center flex-shrink-0">
-            <Wheat className="w-5 h-5 text-green" />
+            <Leaf className="w-5 h-5 text-green" />
           </div>
           <div>
             <h4 className="font-bold text-navy text-base leading-tight">{listing.crop}</h4>
@@ -199,11 +194,9 @@ const PaymentAssuranceCard: React.FC<{ payout: PayoutRecord }> = ({ payout }) =>
       role="status"
       aria-label={`Payment ${payout.status}: ₹${payout.amountInr.toLocaleString('en-IN')}`}
     >
-      {/* Background decorative element */}
       <div className="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-green/5 pointer-events-none" />
       <div className="absolute -right-2 -bottom-8 w-20 h-20 rounded-full bg-green/5 pointer-events-none" />
 
-      {/* Header */}
       <div className="flex items-center gap-3 relative">
         <div
           className={`
@@ -236,7 +229,6 @@ const PaymentAssuranceCard: React.FC<{ payout: PayoutRecord }> = ({ payout }) =>
         </div>
       </div>
 
-      {/* Amount display */}
       <div className="mt-4 p-4 rounded-xl bg-white/80 backdrop-blur-sm border border-green/10 relative">
         <div className="flex items-baseline justify-between">
           <div>
@@ -261,7 +253,6 @@ const PaymentAssuranceCard: React.FC<{ payout: PayoutRecord }> = ({ payout }) =>
           )}
         </div>
 
-        {/* Gateway reference */}
         <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
           <span className="text-gray-400 font-medium">Gateway Ref</span>
           <code className="bg-navy/5 text-navy font-bold px-2 py-1 rounded-md border border-navy/10 text-[11px] tracking-wide">
@@ -281,19 +272,132 @@ const PaymentAssuranceCard: React.FC<{ payout: PayoutRecord }> = ({ payout }) =>
   );
 };
 
+// ─── localStorage helpers ────────────────────────────────────────────────────
+function loadCachedBatches(farmerId: string): CropListing[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(`kisanrahi_batches_${farmerId}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCachedBatches(farmerId: string, batches: CropListing[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(`kisanrahi_batches_${farmerId}`, JSON.stringify(batches));
+  } catch {}
+}
+
 // ─── Main FarmerView ────────────────────────────────────────────────────────
 export const FarmerView: React.FC = () => {
-  const [listings, setListings] = useState<CropListing[]>([...mockListings]);
+  const [listings, setListings] = useState<CropListing[]>([]);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState<string>('');
   const [voiceError, setVoiceError] = useState<string>('');
   const [showToast, setShowToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [farmerId, setFarmerId] = useState<string>('F1');
+  const [farmerName, setFarmerName] = useState<string>('');
+  const [farmerVillage, setFarmerVillage] = useState<string>('');
+  const [primaryCrops, setPrimaryCrops] = useState<string[]>([]);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loadingListings, setLoadingListings] = useState(true);
   const recognitionRef = useRef<any>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Also keep track of confirmed payout to consume
+  // confirmed payout
   const confirmedPayout: PayoutRecord | undefined = mockPayouts.find((p) => p.status === 'Confirmed');
+
+  // ── Load farmer profile ──
+  const loadProfile = useCallback(async () => {
+    try {
+      const res = await fetch('/api/profile');
+      const data = await res.json();
+      if (data?.profile) {
+        const p = data.profile;
+        setFarmerId(p.id || 'F1');
+        setFarmerName(p.name || '');
+        setFarmerVillage(p.village || '');
+        if (p.primaryCrops) {
+          const crops = p.primaryCrops.split(',').map((c: string) => c.trim()).filter(Boolean);
+          setPrimaryCrops(crops);
+        }
+      }
+    } catch {
+      // fallback to localStorage user
+      if (typeof window !== 'undefined') {
+        try {
+          const cached = localStorage.getItem('kisanrahi_user');
+          if (cached) {
+            const u = JSON.parse(cached);
+            setFarmerId(u.id || 'F1');
+            setFarmerName(u.name || '');
+          }
+        } catch {}
+      }
+    } finally {
+      setLoadingProfile(false);
+    }
+  }, []);
+
+  // ── Load farmer-specific batches ──
+  const loadListings = useCallback(async (fId: string) => {
+    setLoadingListings(true);
+    try {
+      // Load from local cache immediately
+      const cached = loadCachedBatches(fId);
+      if (cached.length > 0) {
+        setListings(cached);
+      }
+      // Then fetch from API
+      const res = await fetch(`/api/listings?farmerId=${fId}`);
+      const data = await res.json();
+      if (data?.listings && Array.isArray(data.listings)) {
+        const apiListings: CropListing[] = data.listings;
+        // Merge API + local-only (user-added via voice this session that may not be in DB yet)
+        const localIds = new Set(apiListings.map((l) => l.id));
+        const localOnly = cached.filter((l) => !localIds.has(l.id));
+        const merged = [...localOnly, ...apiListings];
+        setListings(merged);
+        saveCachedBatches(fId, merged);
+      }
+    } catch {
+      // Already loaded from cache above
+    } finally {
+      setLoadingListings(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  // Once we have farmer id, load their listings
+  useEffect(() => {
+    if (!loadingProfile) {
+      loadListings(farmerId);
+    }
+  }, [farmerId, loadingProfile, loadListings]);
+
+  // Listen for profile updates from ProfileModal
+  useEffect(() => {
+    const handleProfileUpdate = (e: any) => {
+      if (e.detail) {
+        const p = e.detail;
+        if (p.name) setFarmerName(p.name);
+        if (p.village) setFarmerVillage(p.village);
+        if (p.primaryCrops) {
+          const crops = p.primaryCrops.split(',').map((c: string) => c.trim()).filter(Boolean);
+          setPrimaryCrops(crops);
+        }
+        flash('✅ Dashboard updated with new profile!', 'success');
+      }
+    };
+    window.addEventListener('kisanrahi_profile_updated', handleProfileUpdate);
+    return () => window.removeEventListener('kisanrahi_profile_updated', handleProfileUpdate);
+  }, []);
 
   // ── Toast helper ──
   const flash = useCallback((message: string, type: 'success' | 'error') => {
@@ -302,14 +406,14 @@ export const FarmerView: React.FC = () => {
     toastTimerRef.current = setTimeout(() => setShowToast(null), 3500);
   }, []);
 
-  // ── Build a CropListing from parsed voice data ──
-  const addListingFromVoice = useCallback(
-    (parsed: { crop: string; qtyKg: number; villageName: string }) => {
+  // ── Add listing via voice/quick-add ──
+  const addListing = useCallback(
+    async (parsed: { crop: string; qtyKg: number; villageName: string }) => {
       const newId = `L${Date.now()}`;
       const newListing: CropListing = {
         id: newId,
-        farmerId: 'F1',
-        farmerName: 'Ramesh Yadav',
+        farmerId,
+        farmerName,
         crop: parsed.crop,
         qtyKg: parsed.qtyKg,
         location: { lat: 24.95, lng: 84.03, villageName: parsed.villageName },
@@ -317,13 +421,32 @@ export const FarmerView: React.FC = () => {
         createdAt: new Date().toISOString(),
       };
 
-      // Push to the imported mock array so other views see it too
-      mockListings.push(newListing);
-      setListings((prev) => [newListing, ...prev]);
+      // Update UI immediately
+      setListings((prev) => {
+        const updated = [newListing, ...prev];
+        saveCachedBatches(farmerId, updated);
+        return updated;
+      });
       setNewIds((prev) => new Set(prev).add(newId));
       flash(`Added ${parsed.qtyKg} kg ${parsed.crop} from ${parsed.villageName}`, 'success');
 
-      // Remove the "new" highlight after a few seconds
+      // Persist to API in background
+      try {
+        await fetch('/api/listings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            crop: parsed.crop,
+            qtyKg: parsed.qtyKg,
+            villageName: parsed.villageName,
+            farmerName,
+          }),
+        });
+      } catch {
+        // still saved locally
+      }
+
+      // Remove new highlight after a few seconds
       setTimeout(() => {
         setNewIds((prev) => {
           const copy = new Set(prev);
@@ -332,12 +455,11 @@ export const FarmerView: React.FC = () => {
         });
       }, 4000);
     },
-    [flash],
+    [farmerId, farmerName, flash],
   );
 
   // ── Start / stop speech recognition ──
   const toggleListening = useCallback(() => {
-    // If already listening, stop
     if (isListening && recognitionRef.current) {
       recognitionRef.current.stop();
       setIsListening(false);
@@ -347,20 +469,18 @@ export const FarmerView: React.FC = () => {
     setVoiceError('');
     setTranscript('');
 
-    // Feature-detect Web Speech API
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      // Fallback: simulate a voice input for demo purposes
       setIsListening(true);
       setTranscript('Listening… (simulated)');
       setTimeout(() => {
-        const simulated = '150 kg potato from Dehri village';
+        const simulated = `150 kg ${primaryCrops[0] || 'potato'} from ${farmerVillage || 'Dehri village'}`;
         setTranscript(simulated);
         const parsed = parseVoiceTranscript(simulated);
         if (parsed) {
-          addListingFromVoice(parsed);
+          addListing(parsed);
         } else {
           flash('Could not parse voice input. Try: "200 kg tomato from Sasaram"', 'error');
         }
@@ -375,9 +495,7 @@ export const FarmerView: React.FC = () => {
     recognition.maxAlternatives = 1;
     recognitionRef.current = recognition;
 
-    recognition.onstart = () => {
-      setIsListening(true);
-    };
+    recognition.onstart = () => setIsListening(true);
 
     recognition.onresult = (event: any) => {
       const last = event.results[event.results.length - 1];
@@ -387,7 +505,7 @@ export const FarmerView: React.FC = () => {
       if (last.isFinal) {
         const parsed = parseVoiceTranscript(text);
         if (parsed) {
-          addListingFromVoice(parsed);
+          addListing(parsed);
         } else {
           flash('Could not parse. Try: "200 kg tomato from Sasaram village"', 'error');
         }
@@ -400,12 +518,10 @@ export const FarmerView: React.FC = () => {
       setIsListening(false);
     };
 
-    recognition.onend = () => {
-      setIsListening(false);
-    };
+    recognition.onend = () => setIsListening(false);
 
     recognition.start();
-  }, [isListening, addListingFromVoice, flash]);
+  }, [isListening, addListing, flash, primaryCrops, farmerVillage]);
 
   // Cleanup
   useEffect(() => {
@@ -440,15 +556,51 @@ export const FarmerView: React.FC = () => {
       )}
 
       <div className="px-4 sm:px-6 py-5 max-w-lg mx-auto space-y-5">
-        {/* ── Section Header ── */}
-        <div>
-          <h2 className="text-xl font-extrabold text-navy tracking-tight">
-            🌾 My Farm Dashboard
-          </h2>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Record crop batches by voice — track from listing to payout.
-          </p>
+
+        {/* ── Farmer Identity Card ── */}
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0 shadow-md">
+            <User className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-extrabold text-navy text-base leading-tight truncate">
+              {loadingProfile ? 'Loading...' : farmerName || 'Farmer Dashboard'}
+            </h2>
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                ID: {farmerId}
+              </span>
+              {farmerVillage && (
+                <span className="text-xs text-gray-500 flex items-center gap-1">
+                  <MapPin className="w-3 h-3" /> {farmerVillage}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-300/50 text-emerald-700 px-2 py-1 rounded-full text-[11px] font-bold">
+            <ShieldCheck className="w-3 h-3" /> KYC ✓
+          </div>
         </div>
+
+        {/* ── My Primary Crops ── */}
+        {primaryCrops.length > 0 && (
+          <div>
+            <h3 className="text-sm font-bold text-navy mb-2">My Crops</h3>
+            <div className="flex flex-wrap gap-2">
+              {primaryCrops.map((crop) => (
+                <button
+                  key={crop}
+                  onClick={() => addListing({ crop, qtyKg: 100, villageName: farmerVillage || 'My Village' })}
+                  className="px-3 py-1.5 text-xs font-bold rounded-full border-2 border-green/30 bg-green/5 text-green hover:bg-green hover:text-white transition-all flex items-center gap-1"
+                  title={`Quick-add 100 kg of ${crop}`}
+                >
+                  <Plus className="w-3 h-3" />
+                  {crop}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Voice Input Card ── */}
         <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
@@ -458,11 +610,13 @@ export const FarmerView: React.FC = () => {
               Voice Listing
             </h3>
             <p className="text-xs text-gray-400 mt-0.5">
-              Say something like <em className="text-navy font-medium">&quot;200 kg tomato from Sasaram village&quot;</em>
+              Say something like{' '}
+              <em className="text-navy font-medium">
+                &quot;200 kg {primaryCrops[0] || 'tomato'} from {farmerVillage || 'Sasaram'} village&quot;
+              </em>
             </p>
           </div>
 
-          {/* Transcript display area */}
           {(transcript || voiceError) && (
             <div className="px-4 pb-3">
               {transcript && (
@@ -477,7 +631,6 @@ export const FarmerView: React.FC = () => {
             </div>
           )}
 
-          {/* Listening indicator */}
           {isListening && (
             <div className="px-4 pb-4 flex items-center gap-2">
               <div className="flex gap-1 items-end">
@@ -496,14 +649,21 @@ export const FarmerView: React.FC = () => {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-base font-bold text-navy">My Crop Batches</h3>
-            <span className="text-xs text-gray-400 font-medium">{listings.length} batches</span>
+            <span className="text-xs text-gray-400 font-medium">
+              {loadingListings ? 'Loading…' : `${listings.length} batches`}
+            </span>
           </div>
 
           <div className="space-y-3">
-            {listings.length === 0 ? (
+            {loadingListings ? (
+              <div className="text-center py-12 text-gray-400 text-sm">
+                <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin opacity-40" />
+                Loading your crop batches…
+              </div>
+            ) : listings.length === 0 ? (
               <div className="text-center py-12 text-gray-400 text-sm">
                 <Circle className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                No crop batches yet. Tap the mic button to add one.
+                No crop batches yet. Use the mic button or tap a crop chip above to add one.
               </div>
             ) : (
               listings.map((listing) => (
@@ -549,27 +709,15 @@ export const FarmerView: React.FC = () => {
         )}
       </button>
 
-      {/* Inline keyframe styles for animations */}
+      {/* Inline keyframe styles */}
       <style jsx>{`
         @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(-12px) scale(0.97);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
+          from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
         }
         @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translate(-50%, -16px);
-          }
-          to {
-            opacity: 1;
-            transform: translate(-50%, 0);
-          }
+          from { opacity: 0; transform: translate(-50%, -16px); }
+          to   { opacity: 1; transform: translate(-50%, 0); }
         }
       `}</style>
     </div>

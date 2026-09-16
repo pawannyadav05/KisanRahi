@@ -65,7 +65,7 @@ const DEMO_CATEGORIES = [
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (role: UserRole) => void;
+  onSuccess?: (user: any) => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -84,6 +84,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   if (!isOpen) return null;
 
+  const handleAuthSuccess = (user: any) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kisanrahi_user', JSON.stringify(user));
+    }
+    onClose();
+    if (onSuccess) onSuccess(user);
+  };
+
   const handleDemoLogin = async (demoPhone: string, demoRole: UserRole) => {
     setLoading(true);
     setError(null);
@@ -96,12 +104,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Login failed');
 
-      setSuccess(`Authenticated as ${data.user.name} (${data.user.role})! Redirecting to Dashboard...`);
+      setSuccess(`Authenticated as ${data.user.name}! Redirecting to Dashboard...`);
       setTimeout(() => {
-        onClose();
-        if (onSuccess) onSuccess(data.user.role);
-        window.location.href = `/?role=${data.user.role}&app=true`;
-      }, 400);
+        handleAuthSuccess(data.user);
+      }, 100);
     } catch (err: any) {
       setError(err.message || 'Demo login failed');
     } finally {
@@ -127,10 +133,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       setSuccess(`Signed in with Google! Redirecting to Dashboard...`);
       setTimeout(() => {
-        onClose();
-        if (onSuccess) onSuccess(data.user.role);
-        window.location.href = `/?role=${data.user.role}&app=true`;
-      }, 400);
+        handleAuthSuccess(data.user);
+      }, 100);
     } catch (err: any) {
       setError(err.message || 'Google authentication failed');
     } finally {
@@ -153,10 +157,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       setSuccess(`Welcome back, ${data.user.name}! Redirecting...`);
       setTimeout(() => {
-        onClose();
-        if (onSuccess) onSuccess(data.user.role);
-        window.location.href = `/?role=${data.user.role}&app=true`;
-      }, 400);
+        handleAuthSuccess(data.user);
+      }, 100);
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {
@@ -179,10 +181,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       setSuccess(`Account created for ${data.user.name}! Redirecting...`);
       setTimeout(() => {
-        onClose();
-        if (onSuccess) onSuccess(data.user.role);
-        window.location.href = `/?role=${data.user.role}&app=true`;
-      }, 400);
+        handleAuthSuccess(data.user);
+      }, 100);
     } catch (err: any) {
       setError(err.message || 'Signup failed');
     } finally {
@@ -191,7 +191,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="px-6 py-4 bg-slate-800/90 border-b border-slate-700 flex items-center justify-between">
