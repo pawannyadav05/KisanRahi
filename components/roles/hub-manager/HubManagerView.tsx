@@ -114,6 +114,18 @@ export const HubManagerView: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Listen for real-time farmer profile updates
+  useEffect(() => {
+    const handleProfileUpdated = (e: any) => {
+      if (farmer && e.detail) {
+        const refreshed = lookupFarmer(farmer.id);
+        if (refreshed) setFarmer(refreshed);
+      }
+    };
+    window.addEventListener('kisanrahi_profile_updated', handleProfileUpdated);
+    return () => window.removeEventListener('kisanrahi_profile_updated', handleProfileUpdated);
+  }, [farmer]);
+
   const evaluatedLot = useMemo(() => evaluateDispatchReadiness(lot), [lot]);
   const fillPct      = Math.min(100, (evaluatedLot.totalKg / evaluatedLot.capacityKg) * 100);
   const isReady      = evaluatedLot.status === 'Ready';
@@ -327,7 +339,12 @@ export const HubManagerView: React.FC = () => {
                     {DEMO_FARMERS.map((f) => (
                       <button
                         key={f.id}
-                        onClick={() => { setFarmerIdInput(f.id); setFarmer(f); setStep('crop'); }}
+                        onClick={() => {
+                          const resolved = lookupFarmer(f.id) || f;
+                          setFarmerIdInput(resolved.id);
+                          setFarmer(resolved);
+                          setStep('crop');
+                        }}
                         className="px-2 py-1 text-[11px] font-bold rounded-md bg-navy/5 hover:bg-saffron/10 text-navy hover:text-saffronDark border border-border hover:border-saffron/30 transition-all"
                       >
                         {f.id}

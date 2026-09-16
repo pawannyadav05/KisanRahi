@@ -305,6 +305,12 @@ export const FarmerView: React.FC = () => {
   const [primaryCrops, setPrimaryCrops] = useState<string[]>([]);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingListings, setLoadingListings] = useState(true);
+  
+  // Crop quantity dialog state
+  const [selectedCropForModal, setSelectedCropForModal] = useState<string | null>(null);
+  const [cropModalQty, setCropModalQty] = useState<string>('100');
+  const [cropModalVillage, setCropModalVillage] = useState<string>('');
+
   const recognitionRef = useRef<any>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -596,16 +602,23 @@ export const FarmerView: React.FC = () => {
         {/* ── My Primary Crops ── */}
         {primaryCrops.length > 0 && (
           <div>
-            <h3 className="text-sm font-bold text-navy mb-2">My Crops</h3>
+            <h3 className="text-sm font-bold text-navy mb-2 flex items-center justify-between">
+              <span>My Crops</span>
+              <span className="text-[11px] font-normal text-gray-500">Click to select quantity & add batch</span>
+            </h3>
             <div className="flex flex-wrap gap-2">
               {primaryCrops.map((crop) => (
                 <button
                   key={crop}
-                  onClick={() => addListing({ crop, qtyKg: 100, villageName: farmerVillage || 'My Village' })}
-                  className="px-3 py-1.5 text-xs font-bold rounded-full border-2 border-green/30 bg-green/5 text-green hover:bg-green hover:text-white transition-all flex items-center gap-1"
-                  title={`Quick-add 100 kg of ${crop}`}
+                  onClick={() => {
+                    setSelectedCropForModal(crop);
+                    setCropModalQty('100');
+                    setCropModalVillage(farmerVillage || 'Sasaram');
+                  }}
+                  className="px-3 py-1.5 text-xs font-bold rounded-full border-2 border-green/30 bg-green/5 text-green hover:bg-green hover:text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                  title={`Select quantity for ${crop}`}
                 >
-                  <Plus className="w-3 h-3" />
+                  <Plus className="w-3.5 h-3.5" />
                   {crop}
                 </button>
               ))}
@@ -692,6 +705,139 @@ export const FarmerView: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* ── Crop Quantity Prompt Modal ── */}
+      {selectedCropForModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+          <div className="bg-white border border-border rounded-3xl max-w-md w-full shadow-2xl overflow-hidden animate-[slideIn_0.3s_ease-out]">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-emerald-600 to-teal-700 p-5 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-xl shadow-inner">
+                  🌾
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-lg leading-tight">
+                    Add {selectedCropForModal}
+                  </h3>
+                  <p className="text-xs text-emerald-100 font-medium">
+                    New Aggregation Batch Listing
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedCropForModal(null)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/25 flex items-center justify-center transition-colors text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const qty = parseFloat(cropModalQty);
+                if (isNaN(qty) || qty <= 0) {
+                  flash('Please enter a valid quantity in kg', 'error');
+                  return;
+                }
+                addListing({
+                  crop: selectedCropForModal,
+                  qtyKg: qty,
+                  villageName: cropModalVillage || farmerVillage || 'My Village',
+                });
+                setSelectedCropForModal(null);
+              }}
+              className="p-6 space-y-5"
+            >
+              {/* Quantity Input */}
+              <div>
+                <label className="block text-xs font-bold text-navy uppercase tracking-wider mb-1.5">
+                  Harvest Quantity (kg) <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    autoFocus
+                    required
+                    value={cropModalQty}
+                    onChange={(e) => setCropModalQty(e.target.value)}
+                    placeholder="e.g. 100"
+                    className="w-full pl-4 pr-16 py-3 rounded-2xl border-2 border-emerald-500/30 focus:border-emerald-500 bg-emerald-50/20 text-navy font-black text-xl tracking-tight focus:outline-none focus:ring-4 focus:ring-emerald-500/10"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-xs text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-lg">
+                    KG
+                  </div>
+                </div>
+
+                {/* Quick Presets */}
+                <div className="flex flex-wrap gap-1.5 mt-2.5">
+                  {[50, 100, 200, 500, 1000].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setCropModalQty(String(preset))}
+                      className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-all ${
+                        cropModalQty === String(preset)
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                          : 'bg-slate-100 hover:bg-emerald-50 text-slate-700 border-slate-200'
+                      }`}
+                    >
+                      +{preset} kg
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Village Location */}
+              <div>
+                <label className="block text-xs font-bold text-navy uppercase tracking-wider mb-1.5">
+                  Aggregation Village / PACS Center
+                </label>
+                <div className="relative">
+                  <MapPin className="w-4 h-4 text-emerald-600 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={cropModalVillage}
+                    onChange={(e) => setCropModalVillage(e.target.value)}
+                    placeholder="e.g. Sasaram"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-canvas text-sm font-medium text-navy focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              {/* Quality & Pricing note */}
+              <div className="p-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/70 text-xs text-amber-900 flex items-center gap-2.5">
+                <ShieldCheck className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <span>
+                  Protected by <strong>DoCA Price Stabilization Floor</strong>. AI Quality Grading conducted upon Hub arrival.
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCropForModal(null)}
+                  className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm shadow-lg shadow-emerald-600/30 transition-all active:scale-98 flex items-center justify-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add to Batch</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ── Floating Action Button ── */}
       <button

@@ -87,6 +87,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleAuthSuccess = (user: any) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('kisanrahi_user', JSON.stringify(user));
+      sessionStorage.setItem('kr_session_active', '1');
     }
     onClose();
     if (onSuccess) onSuccess(user);

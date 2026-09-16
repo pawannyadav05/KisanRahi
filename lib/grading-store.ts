@@ -58,9 +58,76 @@ export const DEMO_FARMERS: FarmerRecord[] = [
 ];
 
 export function lookupFarmer(id: string): FarmerRecord | null {
-  return DEMO_FARMERS.find(
-    (f) => f.id.toLowerCase() === id.trim().toLowerCase()
-  ) ?? null;
+  const cleanId = id.trim().toLowerCase();
+  
+  // First check if current user or cached profile in localStorage matches this ID/phone
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('kisanrahi_user');
+      if (cached) {
+        const u = JSON.parse(cached);
+        const match =
+          u.id?.toLowerCase() === cleanId ||
+          (cleanId === 'f001' && u.id?.toLowerCase() === 'f1') ||
+          (cleanId === 'f1' && u.id?.toLowerCase() === 'f001') ||
+          (cleanId === 'f002' && u.id?.toLowerCase() === 'f2') ||
+          (cleanId === 'f2' && u.id?.toLowerCase() === 'f002') ||
+          (cleanId === 'f003' && u.id?.toLowerCase() === 'f3') ||
+          (cleanId === 'f3' && u.id?.toLowerCase() === 'f003') ||
+          (cleanId === 'f004' && u.id?.toLowerCase() === 'f4') ||
+          (cleanId === 'f4' && u.id?.toLowerCase() === 'f004') ||
+          (cleanId === 'f005' && u.id?.toLowerCase() === 'f5') ||
+          (cleanId === 'f5' && u.id?.toLowerCase() === 'f005') ||
+          (cleanId === 'f006' && u.id?.toLowerCase() === 'f6') ||
+          (cleanId === 'f6' && u.id?.toLowerCase() === 'f006') ||
+          u.phone === id.trim();
+        if (match) {
+          return {
+            id: u.id || id.toUpperCase(),
+            name: u.name || 'Farmer',
+            phone: u.phone || '9876543210',
+            village: u.village || u.address || 'Sasaram',
+          };
+        }
+      }
+
+      const customProfile = localStorage.getItem(`kisanrahi_farmer_profile_${id.toUpperCase()}`) || localStorage.getItem(`kisanrahi_farmer_profile_${cleanId}`);
+      if (customProfile) {
+        const cp = JSON.parse(customProfile);
+        return {
+          id: cp.id || id.toUpperCase(),
+          name: cp.name,
+          phone: cp.phone,
+          village: cp.village || cp.address || 'Sasaram',
+        };
+      }
+    } catch {}
+  }
+
+  const base = DEMO_FARMERS.find(
+    (f) => f.id.toLowerCase() === cleanId || (cleanId.startsWith('f') && parseInt(cleanId.replace(/\D/g, '')) === parseInt(f.id.replace(/\D/g, '')))
+  );
+  if (!base) return null;
+
+  // Merge any updated profile data if available
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('kisanrahi_user');
+      if (cached) {
+        const u = JSON.parse(cached);
+        if (u.id?.toLowerCase() === base.id.toLowerCase() || (u.role === 'farmer' && (u.name === base.name || u.phone === base.phone))) {
+          return {
+            ...base,
+            name: u.name || base.name,
+            village: u.village || u.address || base.village,
+            phone: u.phone || base.phone,
+          };
+        }
+      }
+    } catch {}
+  }
+
+  return base;
 }
 
 // ─── Core Actions ─────────────────────────────────────────────────────────────

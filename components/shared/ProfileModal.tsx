@@ -135,7 +135,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       if (data.profile) {
         setProfile(data.profile);
         if (onProfileUpdated) onProfileUpdated(data.profile);
-        // Fire a global event so FarmerView + page.tsx react instantly
+        // Fire a global event so FarmerView + GovHeader + HubManager + page.tsx react instantly
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('kisanrahi_profile_updated', { detail: data.profile }));
           // Also update localStorage cache
@@ -143,9 +143,19 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           if (cached) {
             try {
               const parsed = JSON.parse(cached);
-              parsed.name = data.profile.name || parsed.name;
+              Object.assign(parsed, {
+                name: data.profile.name || parsed.name,
+                village: data.profile.village || parsed.village,
+                address: data.profile.address || parsed.address,
+                district: data.profile.district || parsed.district,
+                state: data.profile.state || parsed.state,
+                phone: data.profile.phone || parsed.phone,
+              });
               localStorage.setItem('kisanrahi_user', JSON.stringify(parsed));
             } catch {}
+          }
+          if (data.profile.id) {
+            localStorage.setItem(`kisanrahi_farmer_profile_${data.profile.id}`, JSON.stringify(data.profile));
           }
         }
       }

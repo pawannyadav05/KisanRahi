@@ -89,10 +89,11 @@ export default function LoginPage() {
       setSuccess(`Authenticated as ${data.user.name}! Launching dashboard...`);
       if (typeof window !== 'undefined') {
         localStorage.setItem('kisanrahi_user', JSON.stringify(data.user));
+        sessionStorage.setItem('kr_session_active', '1');
       }
       setTimeout(() => {
         window.location.href = `/?app=true`;
-      }, 100);
+      }, 50);
     } catch (err: any) {
       setError(err.message || 'Demo login failed');
     } finally {
@@ -120,10 +121,11 @@ export default function LoginPage() {
       setSuccess(`Signed in with Google as ${data.user.name}! Launching dashboard...`);
       if (typeof window !== 'undefined') {
         localStorage.setItem('kisanrahi_user', JSON.stringify(data.user));
+        sessionStorage.setItem('kr_session_active', '1');
       }
       setTimeout(() => {
         window.location.href = `/?app=true`;
-      }, 100);
+      }, 50);
     } catch (err: any) {
       setError(err.message || 'Google authentication failed');
     } finally {
@@ -148,10 +150,11 @@ export default function LoginPage() {
       setSuccess(`Welcome back, ${data.user.name}! Redirecting to dashboard...`);
       if (typeof window !== 'undefined') {
         localStorage.setItem('kisanrahi_user', JSON.stringify(data.user));
+        sessionStorage.setItem('kr_session_active', '1');
       }
       setTimeout(() => {
         window.location.href = `/?app=true`;
-      }, 100);
+      }, 50);
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {
@@ -176,10 +179,11 @@ export default function LoginPage() {
       setSuccess(`Account registered for ${data.user.name}! Launching view...`);
       if (typeof window !== 'undefined') {
         localStorage.setItem('kisanrahi_user', JSON.stringify(data.user));
+        sessionStorage.setItem('kr_session_active', '1');
       }
       setTimeout(() => {
         window.location.href = `/?app=true`;
-      }, 100);
+      }, 50);
     } catch (err: any) {
       setError(err.message || 'Signup failed');
     } finally {

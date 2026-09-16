@@ -37,6 +37,23 @@ export default function Home() {
   // Check cached session, URL params, and active session on load
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Check if page was reloaded/refreshed
+      const navEntries = window.performance?.getEntriesByType
+        ? window.performance.getEntriesByType('navigation')
+        : [];
+      const isReload = navEntries.length > 0
+        ? (navEntries[0] as PerformanceNavigationTiming).type === 'reload'
+        : Boolean((window.performance as any)?.navigation?.type === 1);
+
+      if (isReload) {
+        // Refresh requested -> clear session and redirect to /login
+        localStorage.removeItem('kisanrahi_user');
+        sessionStorage.removeItem('kr_session_active');
+        fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+        window.location.href = '/login';
+        return;
+      }
+
       const cachedUser = localStorage.getItem('kisanrahi_user');
       const params = new URLSearchParams(window.location.search);
       const appParam = params.get('app');
@@ -77,13 +94,13 @@ export default function Home() {
 
     const handleProfileEvent = (e: any) => {
       if (e.detail) {
-        setCurrentUser((prev) => (prev ? { ...prev, name: e.detail.name || prev.name } : null));
+        setCurrentUser((prev) => (prev ? { ...prev, ...e.detail, name: e.detail.name || prev.name } : null));
         if (typeof window !== 'undefined') {
           const cached = localStorage.getItem('kisanrahi_user');
           if (cached) {
             try {
               const parsed = JSON.parse(cached);
-              parsed.name = e.detail.name || parsed.name;
+              Object.assign(parsed, e.detail);
               localStorage.setItem('kisanrahi_user', JSON.stringify(parsed));
             } catch {}
           }
@@ -109,6 +126,7 @@ export default function Home() {
   const handleLogout = async () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('kisanrahi_user');
+      sessionStorage.removeItem('kr_session_active');
     }
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -116,7 +134,21 @@ export default function Home() {
     setCurrentUser(null);
     setViewMode('landing');
     if (typeof window !== 'undefined') {
-      window.location.href = '/';
+      window.location.href = '/login';
+    }
+  };
+
+  const handleSwitchRole = async () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('kisanrahi_user');
+      sessionStorage.removeItem('kr_session_active');
+    }
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {}
+    setCurrentUser(null);
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
     }
   };
 
@@ -185,7 +217,7 @@ export default function Home() {
               </button>
 
               <button
-                onClick={() => setIsAuthOpen(true)}
+                onClick={handleSwitchRole}
                 className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-semibold text-xs transition-colors flex items-center gap-1.5"
               >
                 <KeyRound className="w-3.5 h-3.5" />
@@ -224,6 +256,7 @@ export default function Home() {
             setCurrentUser(userOrRole);
             if (typeof window !== 'undefined') {
               localStorage.setItem('kisanrahi_user', JSON.stringify(userOrRole));
+              sessionStorage.setItem('kr_session_active', '1');
             }
           }
           setViewMode('app');
