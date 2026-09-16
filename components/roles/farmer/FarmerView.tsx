@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   X,
   Loader2,
+  Weight,
 } from 'lucide-react';
 import type { CropListing, ListingStatus, PayoutRecord } from '@/types/kisanrahi';
 import { mockListings, mockPayouts } from '@/lib/mock-data';
@@ -33,37 +34,122 @@ function stepIndex(status: ListingStatus): number {
 }
 
 // ─── Voice Parser ───────────────────────────────────────────────────────────
-// Extracts crop, qty (kg), and village from a natural speech transcript.
-// Handles patterns like "200 kg tomato from sasaram" or "tomato 300 kilo sasaram village"
-function parseVoiceTranscript(raw: string): { crop: string; qtyKg: number; villageName: string } | null {
+// Extracts crop, qty (kg), village, and expected price/amount from natural voice speech.
+// Handles patterns like "200 kg tomato from sasaram at 35 rupees" or "150 kg potato dehri rate 25"
+function parseVoiceTranscript(raw: string): {
+  crop: string;
+  qtyKg: number;
+  villageName: string;
+  pricePerKg?: number;
+} | null {
   const text = raw.toLowerCase().trim();
 
-  // Match a number optionally followed by kg/kilo/kilogram
-  const qtyMatch = text.match(/(\d+)\s*(?:kg|kilo|kilogram)?/);
-  const qtyKg = qtyMatch ? parseInt(qtyMatch[1], 10) : NaN;
+  // Common crop names (English & Hindi)
+  const cropMapping: Record<string, string> = {
+    tomato: 'Tomato',
+    tamatar: 'Tomato',
+    potato: 'Potato',
+    aloo: 'Potato',
+    alu: 'Potato',
+    onion: 'Onion',
+    pyaz: 'Onion',
+    pyaaz: 'Onion',
+    wheat: 'Wheat',
+    gehu: 'Wheat',
+    gehun: 'Wheat',
+    rice: 'Rice',
+    chawal: 'Rice',
+    paddy: 'Rice',
+    mango: 'Mango',
+    aam: 'Mango',
+    banana: 'Banana',
+    kela: 'Banana',
+    brinjal: 'Brinjal',
+    baingan: 'Brinjal',
+    cabbage: 'Cabbage',
+    patta: 'Cabbage',
+    cauliflower: 'Cauliflower',
+    gobhi: 'Cauliflower',
+    spinach: 'Spinach',
+    palak: 'Spinach',
+    chili: 'Chili',
+    mirchi: 'Chili',
+    capsicum: 'Capsicum',
+    shimla: 'Capsicum',
+    carrot: 'Carrot',
+    gajar: 'Carrot',
+    peas: 'Peas',
+    matar: 'Peas',
+    okra: 'Okra',
+    bhindi: 'Okra',
+    mustard: 'Mustard',
+    sarson: 'Mustard',
+    maize: 'Maize',
+    makka: 'Maize',
+  };
+
+  const detectedKey = Object.keys(cropMapping).find((c) => text.includes(c));
+  if (!detectedKey) return null;
+  const crop = cropMapping[detectedKey];
+
+  // 1. Extract Price / Rate / Amount from voice
+  let pricePerKg: number | undefined;
+
+  // Patterns: "rate 35", "price 35", "bhav 35", "daam 35"
+  const rateMatch = text.match(/(?:rate|price|bhav|daam|cost)\s*(?:of|is|at|:)?\s*(\d+(?:\.\d+)?)/);
+  // Patterns: "35 rupees", "35 rs", "35 rupaye", "35 inr", "₹ 35"
+  const currencyMatch = text.match(/(?:₹\s*(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:rupees|rupee|rs\.?|rupaye|rupya|inr))/);
+  // Patterns: "at 35", "@ 35", "for 35"
+  const atMatch = text.match(/(?:at|@|for)\s*(?:rs\.?|inr|₹)?\s*(\d+(?:\.\d+)?)/);
+  // Patterns: "35 per kg", "35/kg", "35 prati kg"
+  const perKgMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:per|\/|prati)\s*(?:kg|kilo)/);
+
+  if (rateMatch) {
+    pricePerKg = parseFloat(rateMatch[1]);
+  } else if (currencyMatch) {
+    pricePerKg = parseFloat(currencyMatch[1] || currencyMatch[2]);
+  } else if (atMatch) {
+    pricePerKg = parseFloat(atMatch[1]);
+  } else if (perKgMatch) {
+    pricePerKg = parseFloat(perKgMatch[1]);
+  }
+
+  // 2. Extract Quantity (kg / quintal)
+  let qtyKg = NaN;
+  const explicitQtyMatch = text.match(/(\d+)\s*(?:kg|kilo|kilogram)/);
+  const quintalMatch = text.match(/(\d+)\s*(?:quintal|kintal)/);
+
+  if (explicitQtyMatch) {
+    qtyKg = parseInt(explicitQtyMatch[1], 10);
+  } else if (quintalMatch) {
+    qtyKg = parseInt(quintalMatch[1], 10) * 100;
+  } else {
+    // If not followed by kg, find all numbers in the voice text
+    const allNums = Array.from(text.matchAll(/\b\d+\b/g)).map((m) => parseInt(m[0], 10));
+    // Pick the number that isn't the price
+    const candidate = allNums.find((n) => n !== pricePerKg);
+    if (candidate) qtyKg = candidate;
+  }
+
   if (isNaN(qtyKg) || qtyKg <= 0) return null;
 
-  // Common crop names we recognise (extendable)
-  const knownCrops = [
-    'tomato', 'potato', 'onion', 'wheat', 'rice', 'mango',
-    'banana', 'brinjal', 'cabbage', 'cauliflower', 'spinach',
-    'chili', 'capsicum', 'carrot', 'peas', 'okra', 'ladyfinger',
-    'soybean', 'mustard', 'sugarcane', 'maize', 'corn',
-    'tamatar', 'aloo', 'pyaz', 'gehu', 'chawal', 'aam',
-  ];
-  const crop = knownCrops.find((c) => text.includes(c));
-  if (!crop) return null;
+  // 3. Extract Village
+  const cleanForVillage = text
+    .replace(/(?:rate|price|bhav|daam|cost)\s*(?:of|is|at|:)?\s*(\d+(?:\.\d+)?)/g, '')
+    .replace(/(?:₹\s*\d+|\d+\s*(?:rupees|rupee|rs\.?|rupaye|rupya|inr))/g, '')
+    .replace(/(?:at|@|for)\s*(?:rs\.?|inr|₹)?\s*(\d+(?:\.\d+)?)/g, '')
+    .replace(/(\d+)\s*(?:kg|kilo|kilogram|quintal|kintal)?/g, '');
 
-  // Extract village — look for "from <village>" or last word(s) not matched
-  const villageMatch = text.match(/(?:from|village|gaon|gaaon)\s+([a-z\s]+)/);
+  const villageMatch = cleanForVillage.match(/(?:from|village|gaon|gaaon)\s+([a-z]+)/);
   const villageName = villageMatch
     ? villageMatch[1].trim().replace(/\b\w/g, (c) => c.toUpperCase())
-    : 'Unknown Village';
+    : 'Sasaram';
 
   return {
-    crop: crop.charAt(0).toUpperCase() + crop.slice(1),
+    crop,
     qtyKg,
     villageName,
+    pricePerKg,
   };
 }
 
@@ -141,7 +227,17 @@ const CropBatchCard: React.FC<{ listing: CropListing; isNew?: boolean }> = ({ li
           </div>
           <div>
             <h4 className="font-bold text-navy text-base leading-tight">{listing.crop}</h4>
-            <p className="text-sm text-gray-500 font-medium">{listing.qtyKg} kg</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <p className="text-sm text-gray-500 font-medium">{listing.qtyKg} kg</p>
+              {listing.expectedPricePerKg && (
+                <>
+                  <span className="text-gray-300 text-xs">•</span>
+                  <p className="text-sm font-bold text-saffronDark flex items-center">
+                    ₹{listing.expectedPricePerKg}/kg
+                  </p>
+                </>
+              )}
+            </div>
           </div>
         </div>
         <span
@@ -288,6 +384,12 @@ export const FarmerView: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState<string>('');
 
+  // ── Mandi Feature State ──
+  const [pendingListing, setPendingListing] = useState<{ crop: string; qtyKg: number; villageName: string } | null>(null);
+  const [mandiData, setMandiData] = useState<{ pricePerKg: number; arrivalDate: string; isFallback: boolean } | null>(null);
+  const [isMandiLoading, setIsMandiLoading] = useState(false);
+  const [farmerPrice, setFarmerPrice] = useState<string>('');
+
   // Subscribe to grading store — re-renders when Hub Manager grades/pools a listing
   useEffect(() => {
     const unsub = subscribeGradingStore(() => {
@@ -313,36 +415,75 @@ export const FarmerView: React.FC = () => {
 
   // ── Build a CropListing from parsed voice data ──
   const addListingFromVoice = useCallback(
-    (parsed: { crop: string; qtyKg: number; villageName: string }) => {
-      const newId = `L${Date.now()}`;
-      const newListing: CropListing = {
-        id: newId,
-        farmerId: 'F1',
-        farmerName: 'Ramesh Yadav',
-        crop: parsed.crop,
-        qtyKg: parsed.qtyKg,
-        location: { lat: 24.95, lng: 84.03, villageName: parsed.villageName },
-        status: 'Listed',
-        createdAt: new Date().toISOString(),
-      };
+    async (parsed: { crop: string; qtyKg: number; villageName: string; pricePerKg?: number }) => {
+      // 1. Set pending listing state to open the modal
+      setPendingListing(parsed);
+      
+      // If amount was spoken in voice, prioritize it immediately
+      if (parsed.pricePerKg && parsed.pricePerKg > 0) {
+        setFarmerPrice(parsed.pricePerKg.toString());
+      } else {
+        setFarmerPrice('');
+      }
 
-      // Push to the imported mock array so other views see it too
-      mockListings.push(newListing);
-      setListings((prev) => [newListing, ...prev]);
-      setNewIds((prev) => new Set(prev).add(newId));
-      flash(`Added ${parsed.qtyKg} kg ${parsed.crop} from ${parsed.villageName}`, 'success');
+      setMandiData(null);
+      setIsMandiLoading(true);
 
-      // Remove the "new" highlight after a few seconds
-      setTimeout(() => {
-        setNewIds((prev) => {
-          const copy = new Set(prev);
-          copy.delete(newId);
-          return copy;
-        });
-      }, 4000);
+      // 2. Fetch Mandi Price
+      try {
+        const res = await fetch(`/api/mandi-price?crop=${encodeURIComponent(parsed.crop)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setMandiData(data);
+          // Only if farmer did NOT specify price in voice, default to mandi price suggestion
+          if (!parsed.pricePerKg) {
+            setFarmerPrice(data.pricePerKg.toString());
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch mandi price", err);
+      } finally {
+        setIsMandiLoading(false);
+      }
     },
-    [flash],
+    [],
   );
+
+  const confirmListing = useCallback(() => {
+    if (!pendingListing) return;
+
+    const newId = `L${Date.now()}`;
+    const newListing: CropListing = {
+      id: newId,
+      farmerId: 'F1',
+      farmerName: 'Ramesh Yadav',
+      crop: pendingListing.crop,
+      qtyKg: pendingListing.qtyKg,
+      expectedPricePerKg: parseFloat(farmerPrice) || 0,
+      location: { lat: 24.95, lng: 84.03, villageName: pendingListing.villageName },
+      status: 'Listed',
+      createdAt: new Date().toISOString(),
+    };
+
+    mockListings.push(newListing);
+    setListings((prev) => [newListing, ...prev]);
+    setNewIds((prev) => new Set(prev).add(newId));
+    flash(`Added ${pendingListing.qtyKg} kg ${pendingListing.crop} at ₹${farmerPrice}/kg`, 'success');
+    
+    setPendingListing(null);
+
+    setTimeout(() => {
+      setNewIds((prev) => {
+        const copy = new Set(prev);
+        copy.delete(newId);
+        return copy;
+      });
+    }, 4000);
+  }, [pendingListing, farmerPrice, flash]);
+
+  const cancelListing = () => {
+    setPendingListing(null);
+  };
 
   // ── Start / stop speech recognition ──
   const toggleListening = useCallback(() => {
@@ -361,20 +502,7 @@ export const FarmerView: React.FC = () => {
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      // Fallback: simulate a voice input for demo purposes
-      setIsListening(true);
-      setTranscript('Listening… (simulated)');
-      setTimeout(() => {
-        const simulated = '150 kg potato from Dehri village';
-        setTranscript(simulated);
-        const parsed = parseVoiceTranscript(simulated);
-        if (parsed) {
-          addListingFromVoice(parsed);
-        } else {
-          flash('Could not parse voice input. Try: "200 kg tomato from Sasaram"', 'error');
-        }
-        setIsListening(false);
-      }, 2000);
+      setVoiceError('Web Speech API is not supported in this browser. Please use Google Chrome or Microsoft Edge.');
       return;
     }
 
@@ -398,14 +526,22 @@ export const FarmerView: React.FC = () => {
         if (parsed) {
           addListingFromVoice(parsed);
         } else {
-          flash('Could not parse. Try: "200 kg tomato from Sasaram village"', 'error');
+          flash('Could not parse speech. Example: "200 kg tomato from Sasaram at 35 rupees"', 'error');
         }
         setIsListening(false);
       }
     };
 
     recognition.onerror = (event: any) => {
-      setVoiceError(`Voice error: ${event.error}`);
+      if (event.error === 'network') {
+        setVoiceError('Speech network error: unable to reach speech recognition server. Check internet or try speaking again.');
+      } else if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+        setVoiceError('Microphone permission denied. Please allow microphone access in your browser settings.');
+      } else if (event.error === 'no-speech') {
+        setVoiceError('No speech detected. Please tap the mic and speak clearly.');
+      } else {
+        setVoiceError(`Voice error: ${event.error}`);
+      }
       setIsListening(false);
     };
 
@@ -466,8 +602,9 @@ export const FarmerView: React.FC = () => {
               <Mic className="w-4 h-4 text-saffron" />
               Voice Listing
             </h3>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Say something like <em className="text-navy font-medium">&quot;200 kg tomato from Sasaram village&quot;</em>
+            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+              Tap mic and say crop, quantity, village &amp; price:<br />
+              <em className="text-navy font-semibold">&quot;200 kg tomato from Sasaram at 35 rupees&quot;</em>
             </p>
           </div>
 
@@ -481,7 +618,19 @@ export const FarmerView: React.FC = () => {
                 </div>
               )}
               {voiceError && (
-                <p className="text-xs text-red-500 font-medium mt-1">{voiceError}</p>
+                <div className="mt-2 flex items-center justify-between gap-2 p-2.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
+                  <span>{voiceError}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVoiceError('');
+                      toggleListening();
+                    }}
+                    className="font-bold underline text-red-800 flex-shrink-0 cursor-pointer"
+                  >
+                    Retry
+                  </button>
+                </div>
               )}
             </div>
           )}
@@ -557,6 +706,98 @@ export const FarmerView: React.FC = () => {
           <Mic className="w-7 h-7 text-white" />
         )}
       </button>
+
+      {/* ── Listing Confirmation Modal (Mandi Price) ── */}
+      {pendingListing && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-navy/60 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300 pb-safe">
+            <div className="bg-navy p-4 flex items-center justify-between">
+              <h3 className="font-bold text-white flex items-center gap-2">
+                <Sprout className="w-5 h-5 text-saffron" />
+                Confirm Listing
+              </h3>
+              <button onClick={cancelListing} className="text-gray-300 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-5 space-y-5">
+              {/* Voice Extracted Details */}
+              <div className="bg-canvas rounded-xl p-4 border border-border flex items-center justify-between">
+                <div>
+                  <div className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Crop Details</div>
+                  <div className="font-bold text-navy text-lg">{pendingListing.crop}</div>
+                  <div className="text-sm text-gray-600 flex items-center gap-2 mt-0.5">
+                    <span className="flex items-center gap-1"><Weight className="w-3.5 h-3.5" /> {pendingListing.qtyKg} kg</span>
+                    <span className="text-gray-300">•</span>
+                    <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {pendingListing.villageName}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mandi Price Comparison */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-bold text-navy">Set Your Price (per kg)</label>
+                  {isMandiLoading ? (
+                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Fetching Mandi price...
+                    </span>
+                  ) : mandiData ? (
+                    <span className="text-xs font-semibold text-green flex items-center gap-1 bg-green/10 px-2 py-0.5 rounded-full">
+                      Mandi: ₹{mandiData.pricePerKg.toFixed(2)}/kg
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-gray-400">₹</span>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={farmerPrice}
+                    onChange={(e) => setFarmerPrice(e.target.value)}
+                    placeholder="e.g. 35.00"
+                    className="w-full text-2xl font-bold text-navy border-2 border-border rounded-xl px-10 py-3 focus:border-saffron focus:ring-4 focus:ring-saffron/20 outline-none transition-all"
+                    autoFocus
+                  />
+                </div>
+                
+                {/* Information text about Mandi reference */}
+                {mandiData && (
+                  <div className="mt-2 text-[11px] text-gray-500 flex items-start gap-1.5 leading-snug bg-gray-50 p-2 rounded-lg border border-gray-100">
+                    <IndianRupee className="w-3.5 h-3.5 flex-shrink-0 text-gray-400 mt-0.5" />
+                    <div>
+                      {mandiData.isFallback ? (
+                        <><strong>Demo price •</strong> Government mandi data temporarily unavailable. You are in full control of your listing price.</>
+                      ) : (
+                        <><strong>Government mandi data •</strong> Prices as of {mandiData.arrivalDate}. You are in full control of your listing price.</>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={cancelListing}
+                  className="flex-1 py-3.5 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmListing}
+                  disabled={!farmerPrice || parseFloat(farmerPrice) <= 0}
+                  className="flex-1 py-3.5 rounded-xl font-bold text-white bg-green hover:bg-greenDark disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-green/20 transition-all active:scale-95"
+                >
+                  Confirm Listing
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Inline keyframe styles for animations */}
       <style jsx>{`
